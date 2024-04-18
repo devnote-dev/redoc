@@ -1,0 +1,13 @@
+name: redoc
+description: Reformatted Crystal documentation library and utility
+authors:
+  - Devonte W <https://github.com/devnote-dev>
+
+version: 0.1.0
+crystal: '>= 1.11.2'
+license: MPL-2.0
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ~> 1.6.0
