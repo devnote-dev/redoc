@@ -3,19 +3,18 @@ module Redoc
     getter name : String
     getter description : String
 
-    getter constants : Array(Const)
-    getter modules : Array(Module)
-    getter classes : Array(Class)
-    getter structs : Array(Struct)
-    getter enums : Array(Enum)
-    getter aliases : Array(Alias)
-    getter annotations : Array(Annotation)
-    getter defs : Array(Def)
-    getter macros : Array(Macro)
+    getter constants : Array(Const) = [] of Const
+    getter modules : Array(Module) = [] of Module
+    getter classes : Array(Class) = [] of Class
+    getter structs : Array(Struct) = [] of Struct
+    getter enums : Array(Enum) = [] of Enum
+    getter aliases : Array(Alias) = [] of Alias
+    getter annotations : Array(Annotation) = [] of Annotation
+    getter defs : Array(Def) = [] of Def
+    getter macros : Array(Macro) = [] of Macro
 
     # :nodoc:
-    def initialize(@name, @description, @constants, @modules, @classes,
-                   @structs, @enums, @aliases, @annotations, @defs, @macros)
+    def initialize(@name, @description)
     end
   end
 
@@ -32,8 +31,8 @@ module Redoc
 
     getter name : String
     getter full_name : String
-    getter summary : String
-    getter doc : String
+    getter summary : String?
+    getter doc : String?
     getter? top_level : Bool
   end
 
@@ -53,6 +52,10 @@ module Redoc
   class Const < Type
     getter value : String?
     getter location : Location
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level,
+                   @value, @location)
+    end
   end
 
   class Module < Namespace
@@ -72,6 +75,16 @@ module Redoc
     getter? private : Bool
     getter? abstract : Bool
     getter locations : Array(Location)
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level)
+      if @full_name.includes? '('
+        @generics = @full_name
+          .split('(')[1]
+          .gsub(' ', "")[..-2]
+          .split(',')
+          .to_set
+      end
+    end
   end
 
   class Struct < Namespace
@@ -84,6 +97,16 @@ module Redoc
     getter? private : Bool
     getter? abstract : Bool
     getter locations : Array(Location)
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level)
+      if @full_name.includes? '('
+        @generics = @full_name
+          .split('(')[1]
+          .gsub(' ', "")[..-2]
+          .split(',')
+          .to_set
+      end
+    end
   end
 
   class Enum < Type
@@ -94,6 +117,9 @@ module Redoc
     getter constructors : Array(Def)
     getter? private : Bool
     getter location : Location
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level)
+    end
   end
 
   class Alias < Type
