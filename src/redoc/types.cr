@@ -66,15 +66,15 @@ module Redoc
   end
 
   class Class < Namespace
-    getter generics : Set(String)
-    getter parent : Class?
-    getter ancestors : Array(Namespace)
-    getter includes : Array(Module)
-    getter extends : Array(Module)
-    getter constructors : Array(Def)
-    getter? private : Bool
-    getter? abstract : Bool
-    getter locations : Array(Location)
+    property generics : Set(String)
+    property parent : Class?
+    getter ancestors : Array(Namespace) = [] of Namespace
+    getter includes : Array(Module) = [] of Module
+    getter extends : Array(Module) = [] of Module
+    getter constructors : Array(Def) = [] of Def
+    property? private : Bool = false
+    property? abstract : Bool = false
+    property locations : Array(Location) = [] of Location
 
     def initialize(@name, @full_name, @summary, @doc, @top_level)
       if @full_name.includes? '('
@@ -97,16 +97,6 @@ module Redoc
     getter? private : Bool
     getter? abstract : Bool
     getter locations : Array(Location)
-
-    def initialize(@name, @full_name, @summary, @doc, @top_level)
-      if @full_name.includes? '('
-        @generics = @full_name
-          .split('(')[1]
-          .gsub(' ', "")[..-2]
-          .split(',')
-          .to_set
-      end
-    end
   end
 
   class Enum < Type
@@ -117,9 +107,6 @@ module Redoc
     getter constructors : Array(Def)
     getter? private : Bool
     getter location : Location
-
-    def initialize(@name, @full_name, @summary, @doc, @top_level)
-    end
   end
 
   class Alias < Type
