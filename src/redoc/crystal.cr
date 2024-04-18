@@ -1,5 +1,6 @@
 module Redoc
-  private module Crystal
+  # :nodoc:
+  module Crystal
     class Project
       include JSON::Serializable
 
@@ -30,8 +31,8 @@ module Redoc
 
       getter name : String
       getter value : String
-      getter doc : String
-      getter summary : String
+      getter doc : String?
+      getter summary : String?
     end
 
     struct MetaArg
@@ -46,22 +47,28 @@ module Redoc
       include JSON::Serializable
 
       getter name : String
-      getter doc : String
-      getter summary : String
+      getter doc : String?
+      getter summary : String?
       getter? abstract : Bool
-      getter args : Array(MetaArg)
-      getter args_string : String
+      getter args : Array(MetaArg)?
+      getter args_string : String?
       getter location : Location
       getter def : MetaDef
     end
 
     struct MetaDef
+      enum Visibility
+        Public
+        Protected
+        Private
+      end
+
       include JSON::Serializable
 
       getter name : String
-      getter args : Array(MetaArg)
-      getter return_type : String
-      getter visibility : String
+      getter args : Array(MetaArg)?
+      getter return_type : String?
+      getter visibility : Visibility
       getter body : String
     end
 
@@ -72,17 +79,19 @@ module Redoc
       getter full_name : String
       getter? abstract : Bool
       getter kind : Kind
-      getter ancestors : Array(TypeRef)
+      getter ancestors : Array(TypeRef)?
       getter locations : Array(Location)
       getter repository_name : String
       getter? program : Bool
       getter? enum : Bool
       getter? alias : Bool
       getter? const : Bool
-      getter constants : Array(ConstDef)
-      getter included_modules : Array(TypeRef)
-      getter extended_modules : Array(TypeRef)
-      getter class_methods : Array(MetaDef)
+      getter constants : Array(ConstDef)?
+      getter included_modules : Array(TypeRef)?
+      getter extended_modules : Array(TypeRef)?
+      getter class_methods : Array(Def)?
+      getter macros : Array(Def)?
+      getter types : Array(Program)?
     end
   end
 end
