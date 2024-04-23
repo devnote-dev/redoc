@@ -37,21 +37,25 @@ module Redoc
   end
 
   abstract class Namespace < Type
-    getter constants : Array(Const)
-    getter modules : Array(Module)
-    getter classes : Array(Class)
-    getter structs : Array(Struct)
-    getter enums : Array(Enum)
-    getter aliases : Array(Alias)
-    getter annotations : Array(Annotation)
-    getter class_methods : Array(Def)
-    getter instance_methods : Array(Def)
-    getter macros : Array(Macro)
+    # getter constants : Array(Const)
+    # getter modules : Array(Module)
+    # getter classes : Array(Class)
+    # getter structs : Array(Struct)
+    # getter enums : Array(Enum)
+    # getter aliases : Array(Alias)
+    # getter annotations : Array(Annotation)
+    # getter class_methods : Array(Def)
+    # getter instance_methods : Array(Def)
+    # getter macros : Array(Macro)
   end
 
   class Const < Type
     getter value : String?
-    getter location : Location
+    getter location : Location?
+
+    def self.new(const : Crystal::ConstDef, top_level : Bool)
+      new(const.name, const.name, const.summary, const.doc, top_level, const.value, nil)
+    end
 
     def initialize(@name, @full_name, @summary, @doc, @top_level,
                    @value, @location)
@@ -68,9 +72,9 @@ module Redoc
   class Class < Namespace
     property generics : Set(String)
     property parent : Class?
-    getter ancestors : Array(Namespace) = [] of Namespace
-    getter includes : Array(Module) = [] of Module
-    getter extends : Array(Module) = [] of Module
+    # getter ancestors : Array(Namespace) = [] of Namespace
+    # getter includes : Array(Module) = [] of Module
+    # getter extends : Array(Module) = [] of Module
     getter constructors : Array(Def) = [] of Def
     property? private : Bool = false
     property? abstract : Bool = false
@@ -83,6 +87,8 @@ module Redoc
           .gsub(' ', "")[..-2]
           .split(',')
           .to_set
+      else
+        @generics = Set(String).new
       end
     end
   end
@@ -129,6 +135,14 @@ module Redoc
     getter? block : Bool
     getter? splat : Bool
     getter? double_splat : Bool
+
+    def self.new(arg : Crystal::MetaArg)
+      new(arg.name, arg.external_name, arg.restriction)
+    end
+
+    def initialize(@name, @external_name, @type, @default_value = nil)
+      @block = @splat = @double_splat = false
+    end
   end
 
   class Def < Type
@@ -138,12 +152,29 @@ module Redoc
     getter? protected : Bool
     getter? abstract : Bool
     getter? generic : Bool
-    getter location : Location
+    getter location : Location?
+
+    def self.new(method : Crystal::Def, top_level : Bool)
+      vis = method.def.visibility
+      params = method.args.try(&.map { |a| Param.new a }) || [] of Param
+      new(method.name, method.name, method.summary, method.doc, top_level, params, nil, vis.private?, vis.protected?, method.abstract?, false, method.location)
+    end
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level, @params, @return_type, @private, @protected, @abstract, @generic, @location)
+    end
   end
 
   class Macro < Type
     getter params : Array(Param)
     getter? private : Bool
-    getter location : Location
+    getter location : Location?
+
+    def self.new(method : Crystal::Def, top_level : Bool)
+      params = method.args.try(&.map { |a| Param.new a }) || [] of Param
+      new(method.name, method.name, method.summary, method.doc, top_level, params, method.def.visibility.private?, method.location)
+    end
+
+    def initialize(@name, @full_name, @summary, @doc, @top_level, @params, @private, @location)
+    end
   end
 end
