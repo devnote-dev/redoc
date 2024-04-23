@@ -57,18 +57,11 @@ module Redoc
     end
 
     struct MetaDef
-      enum Visibility
-        Public
-        Protected
-        Private
-      end
-
       include JSON::Serializable
 
       getter name : String
       getter args : Array(MetaArg)?
       getter return_type : String?
-      getter visibility : Visibility
       getter body : String
     end
 

@@ -86,11 +86,10 @@ module Redoc
     property includes : Array(TypeRef) = [] of TypeRef
     property including_types : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
-    property? private : Bool
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
-                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
+    def initialize(@name : String, @full_name : String, *, @summary : String? = nil,
+                   @doc : String?, @top_level : Bool = false)
     end
 
     def extends_self? : Bool
@@ -107,13 +106,11 @@ module Redoc
     property includes : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
     property constructors : Array(Def) = [] of Def
-    property? private : Bool = false
     property? abstract : Bool = false
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
-                   @abstract : Bool = false, @summary : String? = nil, @doc : String?,
-                   @top_level : Bool = false)
+    def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -135,13 +132,11 @@ module Redoc
     property includes : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
     property constructors : Array(Def) = [] of Def
-    property? private : Bool
     property? abstract : Bool
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
-                   @abstract : Bool = false, @summary : String? = nil, @doc : String?,
-                   @top_level : Bool = false)
+    def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -176,12 +171,11 @@ module Redoc
     property class_methods : Array(Def) = [] of Def
     property constructors : Array(Def) = [] of Def
     property instance_methods : Array(Def) = [] of Def
-    property? private : Bool
     property locations : Array(Location) = [] of Location
 
     def initialize(@name : String, @full_name : String, @constants : Array(Constant), *,
-                   @type : String? = nil, @private : Bool = false, @summary : String? = nil,
-                   @doc : String? = nil, @top_level : Bool = false)
+                   @type : String? = nil, @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 
@@ -189,11 +183,11 @@ module Redoc
     property name : String
     property full_name : String
     property type : String
-    property? private : Bool
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name : String, @full_name : String, @type : String, *, @private : Bool = false,
-                   @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
+    def initialize(@name : String, @full_name : String, @type : String, *,
+                   @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 
@@ -231,22 +225,17 @@ module Redoc
     property name : String
     property params : Array(Param)
     property return_type : String?
-    property? private : Bool
-    property? protected : Bool
     property? abstract : Bool
     property? generic : Bool
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
-      vis = method.def.visibility
       params = method.args.try(&.map { |a| Param.new a }) || [] of Param
 
       new(
         method.name,
         params: params,
         return_type: method.def.return_type,
-        private: vis.private?,
-        protected: vis.protected?,
         abstract: method.abstract?,
         generic: false,
         location: method.location,
@@ -257,9 +246,9 @@ module Redoc
     end
 
     def initialize(@name : String, *, @params : Array(Param) = [] of Param,
-                   @return_type : String? = nil, @private : Bool = false,
-                   @protected : Bool = false, @abstract : Bool = false, @generic : Bool = false,
-                   @location : Location? = nil, @summary : String? = nil, @doc : String? = nil,
+                   @return_type : String? = nil, @abstract : Bool = false,
+                   @generic : Bool = false, @location : Location? = nil,
+                   @summary : String? = nil, @doc : String? = nil,
                    @top_level : Bool = false)
     end
   end
@@ -267,7 +256,6 @@ module Redoc
   class Macro < Type
     property name : String
     property params : Array(Param)
-    property? private : Bool
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
@@ -276,7 +264,6 @@ module Redoc
       new(
         method.name,
         params: params,
-        private: method.def.visibility.private?,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
@@ -284,9 +271,9 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Param) = [] of Param, @private : Bool = false,
-                   @location : Location? = nil, @summary : String? = nil, @doc : String? = nil,
-                   @top_level : Bool = false)
+    def initialize(@name : String, *, @params : Array(Param) = [] of Param,
+                   @location : Location? = nil, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
     end
   end
 end
