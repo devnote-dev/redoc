@@ -18,14 +18,6 @@ module Redoc
       Annotation
     end
 
-    struct TypeRef
-      include JSON::Serializable
-
-      getter kind : Kind
-      getter full_name : String
-      getter name : String
-    end
-
     struct ConstDef
       include JSON::Serializable
 
@@ -33,14 +25,6 @@ module Redoc
       getter value : String
       getter doc : String?
       getter summary : String?
-    end
-
-    struct MetaArg
-      include JSON::Serializable
-
-      getter name : String
-      getter external_name : String
-      getter restriction : String
     end
 
     struct Def
@@ -54,6 +38,14 @@ module Redoc
       getter args_string : String?
       getter location : Location?
       getter def : MetaDef
+    end
+
+    struct MetaArg
+      include JSON::Serializable
+
+      getter name : String
+      getter external_name : String
+      getter restriction : String
     end
 
     struct MetaDef
