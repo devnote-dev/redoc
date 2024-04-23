@@ -6,8 +6,6 @@ module Redoc
 
     def self.transform(proj : Crystal::Project) : Program
       new(proj.repository_name, proj.body).transform(proj.program)
-
-      @program
     end
 
     private def initialize(name : String, description : String)
@@ -15,22 +13,22 @@ module Redoc
       @top_level = true
     end
 
-    def transform(top_level : Crystal::Program) : Nil
+    def transform(top_level : Crystal::Program) : Program
       if constants = top_level.constants
         constants.each do |const_def|
-          @program.constants << Const.new(const_def)
+          @program.constants << Const.new(const_def, true)
         end
       end
 
       if class_methods = top_level.class_methods
         class_methods.each do |method|
-          @program.defs << Def.new(method)
+          @program.defs << Def.new(method, true)
         end
       end
 
       if macros = top_level.macros
         macros.each do |method|
-          @program.macros << Macro.new(method)
+          @program.macros << Macro.new(method, true)
         end
       end
 
@@ -46,6 +44,8 @@ module Redoc
           end
         end
       end
+
+      @program
     end
 
     def transform(*, module type : Crystal::Program) : Nil
@@ -53,7 +53,6 @@ module Redoc
 
     def transform(*, class type : Crystal::Program) : Nil
       cls = Class.new(type.name, type.full_name, type.summary, type.doc, @top_level)
-      cls.parent = type.superclass
       cls.locations = type.locations
 
       if methods = type.constructors
