@@ -26,14 +26,26 @@ module Redoc
     getter url : String?
   end
 
-  abstract class Type
+  struct TypeRef
     include JSON::Serializable
+
+    enum Kind
+      Module
+      Class
+      Struct
+    end
 
     getter name : String
     getter full_name : String
-    getter summary : String?
-    getter doc : String?
-    getter? top_level : Bool
+    getter kind : Kind
+  end
+
+  abstract class Type
+    include JSON::Serializable
+
+    property summary : String?
+    property doc : String?
+    property? top_level : Bool
   end
 
   abstract class Namespace < Type
@@ -44,43 +56,64 @@ module Redoc
     # getter enums : Array(Enum)
     # getter aliases : Array(Alias)
     # getter annotations : Array(Annotation)
-    # getter class_methods : Array(Def)
-    # getter instance_methods : Array(Def)
-    # getter macros : Array(Macro)
+    getter class_methods : Array(Def) = [] of Def
+    getter instance_methods : Array(Def) = [] of Def
+    getter macros : Array(Macro) = [] of Macro
   end
 
   class Const < Type
-    getter value : String?
-    getter location : Location?
+    property name : String
+    property value : String
 
     def self.new(const : Crystal::ConstDef, top_level : Bool)
-      new(const.name, const.name, const.summary, const.doc, top_level, const.value, nil)
+      new(
+        const.name,
+        const.value,
+        summary: const.summary,
+        doc: const.doc,
+        top_level: top_level
+      )
     end
 
-    def initialize(@name, @full_name, @summary, @doc, @top_level,
-                   @value, @location)
+    def initialize(@name : String, @value : String, *, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
     end
   end
 
   class Module < Namespace
-    getter includes : Array(Module)
-    getter extends : Array(Module)
-    getter? private : Bool
-    getter locations : Array(Location)
+    property name : String
+    property full_name : String
+    property includes : Array(TypeRef) = [] of TypeRef
+    property including_types : Array(TypeRef) = [] of TypeRef
+    property extends : Array(TypeRef) = [] of TypeRef
+    property? private : Bool
+    property locations : Array(Location) = [] of Location
+
+    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
+    end
+
+    def extends_self? : Bool
+      @extends.any? { |m| m.full_name == @full_name }
+    end
   end
 
   class Class < Namespace
+    property name : String
+    property full_name : String
     property generics : Set(String)
-    property parent : Class?
-    # getter ancestors : Array(Namespace) = [] of Namespace
-    # getter includes : Array(Module) = [] of Module
-    # getter extends : Array(Module) = [] of Module
-    getter constructors : Array(Def) = [] of Def
+    property parent : TypeRef?
+    property ancestors : Array(TypeRef) = [] of TypeRef
+    property includes : Array(TypeRef) = [] of TypeRef
+    property extends : Array(TypeRef) = [] of TypeRef
+    property constructors : Array(Def) = [] of Def
     property? private : Bool = false
     property? abstract : Bool = false
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name, @full_name, @summary, @doc, @top_level)
+    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
+                   @abstract : Bool = false, @summary : String? = nil, @doc : String?,
+                   @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -94,47 +127,96 @@ module Redoc
   end
 
   class Struct < Namespace
-    getter generics : Set(String)
-    getter parent : Struct?
-    getter ancestors : Array(Namespace)
-    getter includes : Array(Module)
-    getter extends : Array(Module)
-    getter constructors : Array(Def)
-    getter? private : Bool
-    getter? abstract : Bool
-    getter locations : Array(Location)
+    property name : String
+    property full_name : String
+    property generics : Set(String)
+    property parent : TypeRef?
+    property ancestors : Array(TypeRef) = [] of TypeRef
+    property includes : Array(TypeRef) = [] of TypeRef
+    property extends : Array(TypeRef) = [] of TypeRef
+    property constructors : Array(Def) = [] of Def
+    property? private : Bool
+    property? abstract : Bool
+    property locations : Array(Location) = [] of Location
+
+    def initialize(@name : String, @full_name : String, *, @private : Bool = false,
+                   @abstract : Bool = false, @summary : String? = nil, @doc : String?,
+                   @top_level : Bool = false)
+      if @full_name.includes? '('
+        @generics = @full_name
+          .split('(')[1]
+          .gsub(' ', "")[..-2]
+          .split(',')
+          .to_set
+      else
+        @generics = Set(String).new
+      end
+    end
   end
 
   class Enum < Type
-    getter type : String?
-    getter members : Hash(String, String?)
-    getter class_methods : Array(Def)
-    getter instance_methods : Array(Def)
-    getter constructors : Array(Def)
-    getter? private : Bool
-    getter location : Location
+    struct Constant
+      include JSON::Serializable
+
+      getter name : String
+      getter value : String
+      getter summary : String?
+      getter doc : String?
+
+      def initialize(@name : String, @value : String, *,
+                     @summary : String? = nil, @doc : String? = nil)
+      end
+    end
+
+    property name : String
+    property full_name : String
+    property type : String?
+    property constants : Array(Constant)
+    property ancestors : Array(TypeRef) = [] of TypeRef
+    property class_methods : Array(Def) = [] of Def
+    property constructors : Array(Def) = [] of Def
+    property instance_methods : Array(Def) = [] of Def
+    property? private : Bool
+    property locations : Array(Location) = [] of Location
+
+    def initialize(@name : String, @full_name : String, @constants : Array(Constant), *,
+                   @type : String? = nil, @private : Bool = false, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
+    end
   end
 
   class Alias < Type
-    getter type : String
-    getter? private : Bool
-    getter location : Location
+    property name : String
+    property full_name : String
+    property type : String
+    property? private : Bool
+    property locations : Array(Location) = [] of Location
+
+    def initialize(@name : String, @full_name : String, @type : String, *, @private : Bool = false,
+                   @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
+    end
   end
 
   class Annotation < Type
-    getter locations : Array(Location)
+    property name : String
+    property full_name : String
+    property locations : Array(Location) = [] of Location
+
+    def initialize(@name : String, @full_name : String, *, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
+    end
   end
 
-  struct Param
+  class Param
     include JSON::Serializable
 
-    getter name : String
-    getter external_name : String?
-    getter type : String?
-    getter default_value : String?
-    getter? block : Bool
-    getter? splat : Bool
-    getter? double_splat : Bool
+    property name : String
+    property external_name : String?
+    property type : String?
+    property default_value : String?
+    property? block : Bool
+    property? splat : Bool
+    property? double_splat : Bool
 
     def self.new(arg : Crystal::MetaArg)
       new(arg.name, arg.external_name, arg.restriction)
@@ -146,35 +228,65 @@ module Redoc
   end
 
   class Def < Type
-    getter params : Array(Param)
-    getter return_type : String?
-    getter? private : Bool
-    getter? protected : Bool
-    getter? abstract : Bool
-    getter? generic : Bool
-    getter location : Location?
+    property name : String
+    property params : Array(Param)
+    property return_type : String?
+    property? private : Bool
+    property? protected : Bool
+    property? abstract : Bool
+    property? generic : Bool
+    property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
       vis = method.def.visibility
       params = method.args.try(&.map { |a| Param.new a }) || [] of Param
-      new(method.name, method.name, method.summary, method.doc, top_level, params, nil, vis.private?, vis.protected?, method.abstract?, false, method.location)
+
+      new(
+        method.name,
+        params: params,
+        return_type: method.def.return_type,
+        private: vis.private?,
+        protected: vis.protected?,
+        abstract: method.abstract?,
+        generic: false,
+        location: method.location,
+        summary: method.summary,
+        doc: method.doc,
+        top_level: top_level,
+      )
     end
 
-    def initialize(@name, @full_name, @summary, @doc, @top_level, @params, @return_type, @private, @protected, @abstract, @generic, @location)
+    def initialize(@name : String, *, @params : Array(Param) = [] of Param,
+                   @return_type : String? = nil, @private : Bool = false,
+                   @protected : Bool = false, @abstract : Bool = false, @generic : Bool = false,
+                   @location : Location? = nil, @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 
   class Macro < Type
-    getter params : Array(Param)
-    getter? private : Bool
-    getter location : Location?
+    property name : String
+    property params : Array(Param)
+    property? private : Bool
+    property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
       params = method.args.try(&.map { |a| Param.new a }) || [] of Param
-      new(method.name, method.name, method.summary, method.doc, top_level, params, method.def.visibility.private?, method.location)
+
+      new(
+        method.name,
+        params: params,
+        private: method.def.visibility.private?,
+        location: method.location,
+        summary: method.summary,
+        doc: method.doc,
+        top_level: top_level,
+      )
     end
 
-    def initialize(@name, @full_name, @summary, @doc, @top_level, @params, @private, @location)
+    def initialize(@name : String, *, @params : Array(Param) = [] of Param, @private : Bool = false,
+                   @location : Location? = nil, @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 end
