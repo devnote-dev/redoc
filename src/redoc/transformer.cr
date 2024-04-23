@@ -52,7 +52,13 @@ module Redoc
     end
 
     def transform(*, class type : Crystal::Program) : Nil
-      cls = Class.new(type.name, type.full_name, type.summary, type.doc, @top_level)
+      cls = Class.new(
+        type.name,
+        type.full_name,
+        summary: type.summary,
+        doc: type.doc,
+        top_level: @top_level,
+      )
       cls.locations = type.locations
 
       if methods = type.constructors
