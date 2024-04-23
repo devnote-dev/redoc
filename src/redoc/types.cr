@@ -1,5 +1,5 @@
 module Redoc
-  class Program
+  class Project
     getter name : String
     getter description : String
 

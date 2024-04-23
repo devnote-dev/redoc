@@ -1,34 +1,34 @@
 module Redoc
   # :nodoc:
   class Transformer
-    @program : Program
+    @project : Project
     @top_level : Bool
 
-    def self.transform(proj : Crystal::Project) : Program
-      new(proj.repository_name, proj.body).transform(proj.program)
+    def self.transform(main : Crystal::Program) : Project
+      new(main.repository_name, main.body).transform(main.program)
     end
 
     private def initialize(name : String, description : String)
-      @program = Program.new name, description
+      @project = Project.new name, description
       @top_level = true
     end
 
-    def transform(top_level : Crystal::Program) : Program
+    def transform(top_level : Crystal::Type) : Project
       if constants = top_level.constants
         constants.each do |const_def|
-          @program.constants << Const.new(const_def, true)
+          @project.constants << Const.new(const_def, true)
         end
       end
 
       if class_methods = top_level.class_methods
         class_methods.each do |method|
-          @program.defs << Def.new(method, true)
+          @project.defs << Def.new(method, true)
         end
       end
 
       if macros = top_level.macros
         macros.each do |method|
-          @program.macros << Macro.new(method, true)
+          @project.macros << Macro.new(method, true)
         end
       end
 
@@ -45,13 +45,13 @@ module Redoc
         end
       end
 
-      @program
+      @project
     end
 
-    def transform(*, module type : Crystal::Program) : Nil
+    def transform(*, module type : Crystal::Type) : Nil
     end
 
-    def transform(*, class type : Crystal::Program) : Nil
+    def transform(*, class type : Crystal::Type) : Nil
       cls = Class.new(
         type.name,
         type.full_name,
@@ -67,19 +67,19 @@ module Redoc
         end
       end
 
-      @program.classes << cls
+      @project.classes << cls
     end
 
-    def transform(*, struct type : Crystal::Program) : Nil
+    def transform(*, struct type : Crystal::Type) : Nil
     end
 
-    def transform(*, enum type : Crystal::Program) : Nil
+    def transform(*, enum type : Crystal::Type) : Nil
     end
 
-    def transform(*, alias type : Crystal::Program) : Nil
+    def transform(*, alias type : Crystal::Type) : Nil
     end
 
-    def transform(*, annotation type : Crystal::Program) : Nil
+    def transform(*, annotation type : Crystal::Type) : Nil
     end
   end
 end

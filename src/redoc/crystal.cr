@@ -1,12 +1,12 @@
 module Redoc
   # :nodoc:
   module Crystal
-    class Project
+    class Program
       include JSON::Serializable
 
       getter repository_name : String
       getter body : String
-      getter program : Program
+      getter program : Type
     end
 
     enum Kind
@@ -57,7 +57,7 @@ module Redoc
       getter body : String
     end
 
-    class Program
+    class Type
       include JSON::Serializable
 
       getter name : String
@@ -81,7 +81,7 @@ module Redoc
       getter class_methods : Array(Def)?
       getter instance_methods : Array(Def)?
       getter macros : Array(Def)?
-      getter types : Array(Program)?
+      getter types : Array(Type)?
     end
   end
 end
