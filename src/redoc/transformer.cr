@@ -26,29 +26,20 @@ module Redoc
       end
 
       if types = top_level.types
-        types.each do |type|
-          case type.kind
-          in .module?     then project.modules << transform_module type, true
-          in .class?      then project.classes << transform_class type, true
-          in .struct?     then project.structs << transform_struct type, true
-          in .enum?       then project.enums << transform_enum type, true
-          in .alias?      then project.aliases << transform_alias type, true
-          in .annotation? then project.annotations << transform_annotation type, true
-          end
-        end
+        types.each { |inner| transform inner, project, true }
       end
 
       project
     end
 
-    private def self.transform(type : Crystal::Type, namespace : Namespace) : Nil
+    private def self.transform(type : Crystal::Type, namespace : Namespace, top_level : Bool) : Nil
       case type.kind
-      in .module?     then namespace.modules << transform_module type, false
-      in .class?      then namespace.classes << transform_class type, false
-      in .struct?     then namespace.structs << transform_struct type, false
-      in .enum?       then namespace.enums << transform_enum type, false
-      in .alias?      then namespace.aliases << transform_alias type, false
-      in .annotation? then namespace.annotations << transform_annotation type, false
+      in .module?     then namespace.modules << transform_module type, top_level
+      in .class?      then namespace.classes << transform_class type, top_level
+      in .struct?     then namespace.structs << transform_struct type, top_level
+      in .enum?       then namespace.enums << transform_enum type, top_level
+      in .alias?      then namespace.aliases << transform_alias type, top_level
+      in .annotation? then namespace.annotations << transform_annotation type, top_level
       end
     end
 
@@ -71,7 +62,7 @@ module Redoc
       end
 
       if types = type.types
-        types.each { |inner| transform inner, mod }
+        types.each { |inner| transform inner, mod, false }
       end
 
       mod
@@ -117,7 +108,7 @@ module Redoc
         end
 
         if types = type.types
-          types.each { |inner| transform inner, cls }
+          types.each { |inner| transform inner, cls, false }
         end
 
         cls

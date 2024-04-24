@@ -1,17 +1,20 @@
 module Redoc
+  module Namespace
+    property constants : Array(Const) = [] of Const
+    property modules : Array(Module) = [] of Module
+    property classes : Array(Class) = [] of Class
+    property structs : Array(Struct) = [] of Struct
+    property enums : Array(Enum) = [] of Enum
+    property aliases : Array(Alias) = [] of Alias
+    property annotations : Array(Annotation) = [] of Annotation
+  end
+
   class Project
     include JSON::Serializable
+    include Namespace
 
     getter name : String
     getter description : String
-
-    getter constants : Array(Const) = [] of Const
-    getter modules : Array(Module) = [] of Module
-    getter classes : Array(Class) = [] of Class
-    getter structs : Array(Struct) = [] of Struct
-    getter enums : Array(Enum) = [] of Enum
-    getter aliases : Array(Alias) = [] of Alias
-    getter annotations : Array(Annotation) = [] of Annotation
     getter defs : Array(Def) = [] of Def
     getter macros : Array(Macro) = [] of Macro
 
@@ -53,19 +56,6 @@ module Redoc
     property? top_level : Bool
   end
 
-  abstract class Namespace < Type
-    # getter constants : Array(Const)
-    getter modules : Array(Module) = [] of Module
-    getter classes : Array(Class) = [] of Class
-    getter structs : Array(Struct) = [] of Struct
-    getter enums : Array(Enum) = [] of Enum
-    getter aliases : Array(Alias) = [] of Alias
-    getter annotations : Array(Annotation) = [] of Annotation
-    getter class_methods : Array(Def) = [] of Def
-    getter instance_methods : Array(Def) = [] of Def
-    getter macros : Array(Macro) = [] of Macro
-  end
-
   class Const < Type
     property name : String
     property value : String
@@ -85,12 +75,17 @@ module Redoc
     end
   end
 
-  class Module < Namespace
+  class Module < Type
+    include Namespace
+
     property name : String
     property full_name : String
     property includes : Array(TypeRef) = [] of TypeRef
     property including_types : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
+    property class_methods : Array(Def) = [] of Def
+    property instance_methods : Array(Def) = [] of Def
+    property macros : Array(Macro) = [] of Macro
     property locations : Array(Location) = [] of Location
 
     def initialize(@name : String, @full_name : String, *, @summary : String? = nil,
@@ -102,7 +97,9 @@ module Redoc
     end
   end
 
-  class Class < Namespace
+  class Class < Type
+    include Namespace
+
     property name : String
     property full_name : String
     property generics : Set(String)
@@ -111,7 +108,10 @@ module Redoc
     property ancestors : Array(TypeRef) = [] of TypeRef
     property includes : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
+    property class_methods : Array(Def) = [] of Def
     property constructors : Array(Def) = [] of Def
+    property instance_methods : Array(Def) = [] of Def
+    property macros : Array(Macro) = [] of Macro
     property? abstract : Bool = false
     property locations : Array(Location) = [] of Location
 
@@ -129,7 +129,9 @@ module Redoc
     end
   end
 
-  class Struct < Namespace
+  class Struct < Type
+    include Namespace
+
     property name : String
     property full_name : String
     property generics : Set(String)
@@ -138,7 +140,10 @@ module Redoc
     property ancestors : Array(TypeRef) = [] of TypeRef
     property includes : Array(TypeRef) = [] of TypeRef
     property extends : Array(TypeRef) = [] of TypeRef
+    property class_methods : Array(Def) = [] of Def
     property constructors : Array(Def) = [] of Def
+    property instance_methods : Array(Def) = [] of Def
+    property macros : Array(Macro) = [] of Macro
     property? abstract : Bool
     property locations : Array(Location) = [] of Location
 
