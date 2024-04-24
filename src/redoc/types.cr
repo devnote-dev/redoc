@@ -30,7 +30,7 @@ module Redoc
       resolve? *Redoc.parse_query pattern
     end
 
-    private def resolve?(namespace : Array(String), symbol : String?, instance : Bool) : Type?
+    def resolve?(namespace : Array(String), symbol : String?, instance : Bool) : Type?
       if namespace.empty?
         return @defs.find { |d| d.name == symbol }
       end
