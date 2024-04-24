@@ -30,7 +30,7 @@ module Redoc
       resolve? *Redoc.parse_query pattern
     end
 
-    def resolve?(namespace : Array(String), symbol : String?, instance : Bool) : Type?
+    def resolve?(namespace : Array(String), symbol : String?, kind : QueryKind) : Type?
       if namespace.empty?
         if method = @defs.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
           return method
@@ -48,11 +48,7 @@ module Redoc
       return unless type = recurse self, namespace
       return type unless symbol
 
-      if instance
-        if type.responds_to?(:instance_methods)
-          return type.instance_methods.find { |c| c.name == symbol }
-        end
-      else
+      if kind.class? || kind.operator?
         if type.responds_to?(:constructors)
           if method = type.constructors.find { |c| c.name == symbol }
             return method
@@ -66,7 +62,15 @@ module Redoc
         end
 
         if type.responds_to?(:macros)
-          return type.macros.find { |m| m.name == symbol }
+          if method = type.macros.find { |m| m.name == symbol }
+            return method
+          end
+        end
+      end
+
+      if kind.instance? || kind.operator?
+        if type.responds_to?(:instance_methods)
+          return type.instance_methods.find { |c| c.name == symbol }
         end
       end
     end
