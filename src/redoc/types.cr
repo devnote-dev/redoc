@@ -48,7 +48,7 @@ module Redoc
       return unless type = recurse self, namespace
       return type unless symbol
 
-      if kind.class? || kind.operator?
+      if kind.class? || kind.all?
         if type.responds_to?(:constructors)
           if method = type.constructors.find { |c| c.name == symbol }
             return method
@@ -68,7 +68,7 @@ module Redoc
         end
       end
 
-      if kind.instance? || kind.operator?
+      if kind.instance? || kind.all?
         if type.responds_to?(:instance_methods)
           return type.instance_methods.find { |c| c.name == symbol }
         end

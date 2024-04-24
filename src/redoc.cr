@@ -9,7 +9,7 @@ module Redoc
   enum QueryKind
     Class
     Instance
-    Operator
+    All
   end
 
   def self.load(source : String | IO) : Project
@@ -23,8 +23,8 @@ module Redoc
     symbol = match["sym"]?
     namespace = match["ns"]?.try(&.split("::", remove_empty: true)) || [] of String
 
-    if symbol && /#|[^\w]+/.matches? symbol
-      kind = QueryKind::Operator
+    if namespace.empty? || symbol && /#|[^\w]+/.matches? symbol
+      kind = QueryKind::All
     elsif match["scp"]? == "#"
       kind = QueryKind::Instance
     else
