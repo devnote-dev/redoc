@@ -150,30 +150,17 @@ module Redoc
   end
 
   class Enum < Type
-    struct Constant
-      include JSON::Serializable
-
-      getter name : String
-      getter value : String
-      getter summary : String?
-      getter doc : String?
-
-      def initialize(@name : String, @value : String, *,
-                     @summary : String? = nil, @doc : String? = nil)
-      end
-    end
-
     property name : String
     property full_name : String
     property type : String?
-    property constants : Array(Constant)
+    property constants : Array(Const)
     property ancestors : Array(TypeRef) = [] of TypeRef
     property class_methods : Array(Def) = [] of Def
     property constructors : Array(Def) = [] of Def
     property instance_methods : Array(Def) = [] of Def
     property locations : Array(Location) = [] of Location
 
-    def initialize(@name : String, @full_name : String, @constants : Array(Constant), *,
+    def initialize(@name : String, @full_name : String, @constants : Array(Const), *,
                    @type : String? = nil, @summary : String? = nil, @doc : String? = nil,
                    @top_level : Bool = false)
     end
