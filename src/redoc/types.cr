@@ -22,9 +22,15 @@ module Redoc
     def initialize(@name, @description)
     end
 
-    def resolve?(pattern : String) : Type?
-      namespace, symbol, instance = Redoc.parse_query pattern
+    def resolve(pattern : String) : Type
+      resolve(pattern) || raise "Type or symbol not found"
+    end
 
+    def resolve?(pattern : String) : Type?
+      resolve? *Redoc.parse_query pattern
+    end
+
+    private def resolve?(namespace : Array(String), symbol : String?, instance : Bool) : Type?
       if namespace.empty?
         return @defs.find { |d| d.name == symbol }
       end
