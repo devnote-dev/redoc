@@ -1,5 +1,7 @@
 module Redoc
   class Project
+    include JSON::Serializable
+
     getter name : String
     getter description : String
 
@@ -50,12 +52,12 @@ module Redoc
 
   abstract class Namespace < Type
     # getter constants : Array(Const)
-    # getter modules : Array(Module)
-    # getter classes : Array(Class)
-    # getter structs : Array(Struct)
-    # getter enums : Array(Enum)
-    # getter aliases : Array(Alias)
-    # getter annotations : Array(Annotation)
+    getter modules : Array(Module) = [] of Module
+    getter classes : Array(Class) = [] of Class
+    getter structs : Array(Struct) = [] of Struct
+    getter enums : Array(Enum) = [] of Enum
+    getter aliases : Array(Alias) = [] of Alias
+    getter annotations : Array(Annotation) = [] of Annotation
     getter class_methods : Array(Def) = [] of Def
     getter instance_methods : Array(Def) = [] of Def
     getter macros : Array(Macro) = [] of Macro
