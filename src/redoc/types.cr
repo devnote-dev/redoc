@@ -32,7 +32,11 @@ module Redoc
 
     def resolve?(namespace : Array(String), symbol : String?, instance : Bool) : Type?
       if namespace.empty?
-        return @defs.find { |d| d.name == symbol }
+        if method = @defs.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
+          return method
+        end
+
+        namespace << "Object"
       end
 
       unless symbol && namespace.size == 1
@@ -56,7 +60,13 @@ module Redoc
         end
 
         if type.responds_to?(:class_methods)
-          return type.class_methods.find { |c| c.name == symbol }
+          if method = type.class_methods.find { |c| c.name == symbol }
+            return method
+          end
+        end
+
+        if type.responds_to?(:macros)
+          return type.macros.find { |m| m.name == symbol }
         end
       end
     end
