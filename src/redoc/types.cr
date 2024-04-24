@@ -25,6 +25,7 @@ module Redoc
 
     getter filename : String
     getter line_number : Int32
+    @[JSON::Field(emit_null: true)]
     getter url : String?
   end
 
@@ -45,7 +46,9 @@ module Redoc
   abstract class Type
     include JSON::Serializable
 
+    @[JSON::Field(emit_null: true)]
     property summary : String?
+    @[JSON::Field(emit_null: true)]
     property doc : String?
     property? top_level : Bool
   end
@@ -103,6 +106,7 @@ module Redoc
     property name : String
     property full_name : String
     property generics : Set(String)
+    @[JSON::Field(emit_null: true)]
     property parent : TypeRef?
     property ancestors : Array(TypeRef) = [] of TypeRef
     property includes : Array(TypeRef) = [] of TypeRef
@@ -129,6 +133,7 @@ module Redoc
     property name : String
     property full_name : String
     property generics : Set(String)
+    @[JSON::Field(emit_null: true)]
     property parent : TypeRef?
     property ancestors : Array(TypeRef) = [] of TypeRef
     property includes : Array(TypeRef) = [] of TypeRef
@@ -154,6 +159,7 @@ module Redoc
   class Enum < Type
     property name : String
     property full_name : String
+    @[JSON::Field(emit_null: true)]
     property type : String?
     property constants : Array(Const)
     property ancestors : Array(TypeRef) = [] of TypeRef
@@ -194,8 +200,11 @@ module Redoc
     include JSON::Serializable
 
     property name : String
+    @[JSON::Field(emit_null: true)]
     property external_name : String?
+    @[JSON::Field(emit_null: true)]
     property type : String?
+    @[JSON::Field(emit_null: true)]
     property default_value : String?
     property? block : Bool
     property? splat : Bool
@@ -213,6 +222,7 @@ module Redoc
   class Def < Type
     property name : String
     property params : Array(Param)
+    @[JSON::Field(emit_null: true)]
     property return_type : String?
     property? abstract : Bool
     property? generic : Bool
@@ -245,6 +255,7 @@ module Redoc
   class Macro < Type
     property name : String
     property params : Array(Param)
+    @[JSON::Field(emit_null: true)]
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
