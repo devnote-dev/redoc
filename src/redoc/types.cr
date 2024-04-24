@@ -296,7 +296,7 @@ module Redoc
     property? double_splat : Bool
 
     def self.new(arg : Crystal::MetaArg)
-      new(arg.name, arg.external_name, arg.restriction)
+      new(arg.name, arg.external_name, arg.restriction.presence)
     end
 
     def initialize(@name, @external_name, @type, @default_value = nil)
