@@ -297,10 +297,23 @@ module Redoc
     property return_type : String?
     property? abstract : Bool
     property? generic : Bool
+    property? yields : Bool
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
       params = method.args.try(&.map { |a| Param.new a }) || [] of Param
+
+      if index = method.def.splat_index
+        params[index].splat = true
+      end
+
+      if arg = method.def.double_splat
+        params << Param.new(arg).tap &.double_splat = true
+      end
+
+      if arg = method.def.block_arg
+        params << Param.new(arg).tap &.block = true
+      end
 
       new(
         method.name,
@@ -308,6 +321,7 @@ module Redoc
         return_type: method.def.return_type,
         abstract: method.abstract?,
         generic: false,
+        yields: !!method.def.yields,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
@@ -317,9 +331,9 @@ module Redoc
 
     def initialize(@name : String, *, @params : Array(Param) = [] of Param,
                    @return_type : String? = nil, @abstract : Bool = false,
-                   @generic : Bool = false, @location : Location? = nil,
-                   @summary : String? = nil, @doc : String? = nil,
-                   @top_level : Bool = false)
+                   @generic : Bool = false, @yields : Bool = false,
+                   @location : Location? = nil, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
     end
   end
 

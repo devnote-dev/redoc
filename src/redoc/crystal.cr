@@ -54,6 +54,10 @@ module Redoc
       getter name : String
       getter args : Array(MetaArg)?
       getter return_type : String?
+      getter yields : Int32?
+      getter block_arg : MetaArg?
+      getter splat_index : Int32?
+      getter double_splat : MetaArg?
       getter body : String
     end
 
