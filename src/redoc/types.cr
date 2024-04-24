@@ -267,7 +267,7 @@ module Redoc
     end
   end
 
-  class Param
+  class Parameter
     include JSON::Serializable
 
     property name : String
@@ -292,7 +292,7 @@ module Redoc
 
   class Def < Type
     property name : String
-    property params : Array(Param)
+    property params : Array(Parameter)
     @[JSON::Field(emit_null: true)]
     property return_type : String?
     property? abstract : Bool
@@ -301,18 +301,18 @@ module Redoc
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
-      params = method.args.try(&.map { |a| Param.new a }) || [] of Param
+      params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
       if index = method.def.splat_index
         params[index].splat = true
       end
 
       if arg = method.def.double_splat
-        params << Param.new(arg).tap &.double_splat = true
+        params << Parameter.new(arg).tap &.double_splat = true
       end
 
       if arg = method.def.block_arg
-        params << Param.new(arg).tap &.block = true
+        params << Parameter.new(arg).tap &.block = true
       end
 
       new(
@@ -329,7 +329,7 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Param) = [] of Param,
+    def initialize(@name : String, *, @params : Array(Parameter) = [] of Param,
                    @return_type : String? = nil, @abstract : Bool = false,
                    @generic : Bool = false, @yields : Bool = false,
                    @location : Location? = nil, @summary : String? = nil,
@@ -339,12 +339,12 @@ module Redoc
 
   class Macro < Type
     property name : String
-    property params : Array(Param)
+    property params : Array(Parameter)
     @[JSON::Field(emit_null: true)]
     property location : Location?
 
     def self.new(method : Crystal::Def, top_level : Bool)
-      params = method.args.try(&.map { |a| Param.new a }) || [] of Param
+      params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
       new(
         method.name,
@@ -356,7 +356,7 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Param) = [] of Param,
+    def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
                    @location : Location? = nil, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
