@@ -47,11 +47,11 @@ module Redoc
       mod = Module.new(
         type.name,
         type.full_name,
+        locations: type.locations,
         summary: type.summary,
         doc: type.doc,
         top_level: top_level,
       )
-      mod.locations = type.locations
 
       if included = type.included_modules
         mod.includes = included
@@ -74,12 +74,12 @@ module Redoc
           type.name,
           type.full_name,
           abstract: false,
+          locations: type.locations,
           summary: type.summary,
           doc: type.doc,
           top_level: top_level,
         )
         cls.parent = type.superclass
-        cls.locations = type.locations
 
         if ancestors = type.ancestors
           cls.ancestors = ancestors
@@ -127,11 +127,11 @@ module Redoc
           type.name,
           type.full_name,
           constants,
+          locations: type.locations,
           summary: type.summary,
           doc: type.doc,
           top_level: top_level,
         )
-        %enum.locations = type.locations
 
         if ancestors = type.ancestors
           %enum.ancestors = ancestors
@@ -150,26 +150,26 @@ module Redoc
     end
 
     private def self.transform_alias(type : Crystal::Type, top_level : Bool) : Alias
-      {% begin %}
-        %alias = Alias.new(
-          type.name,
-          type.full_name,
-          type.aliased.as(String),
-          summary: type.summary,
-          doc: type.doc,
-          top_level: top_level,
-        )
-        %alias.locations = type.locations
-
-        %alias
-      {% end %}
+      Alias.new(
+        type.name,
+        type.full_name,
+        type.aliased.as(String),
+        locations: type.locations,
+        summary: type.summary,
+        doc: type.doc,
+        top_level: top_level,
+      )
     end
 
     private def self.transform_annotation(type : Crystal::Type, top_level : Bool) : Annotation
-      ann = Annotation.new(type.name, type.full_name, top_level: top_level)
-      ann.locations = type.locations
-
-      ann
+      Annotation.new(
+        type.name,
+        type.full_name,
+        locations: type.locations,
+        summary: type.summary,
+        doc: type.doc,
+        top_level: top_level,
+      )
     end
   end
 end

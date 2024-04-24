@@ -86,10 +86,11 @@ module Redoc
     property class_methods : Array(Def) = [] of Def
     property instance_methods : Array(Def) = [] of Def
     property macros : Array(Macro) = [] of Macro
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *, @summary : String? = nil,
-                   @doc : String?, @top_level : Bool = false)
+    def initialize(@name : String, @full_name : String, *,
+                   @locations : Array(Location) = [] of Location,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
     end
 
     def extends_self? : Bool
@@ -113,10 +114,11 @@ module Redoc
     property instance_methods : Array(Def) = [] of Def
     property macros : Array(Macro) = [] of Macro
     property? abstract : Bool = false
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
     def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
-                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
+                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
+                   @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -145,10 +147,11 @@ module Redoc
     property instance_methods : Array(Def) = [] of Def
     property macros : Array(Macro) = [] of Macro
     property? abstract : Bool
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
     def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
-                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
+                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
+                   @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -171,11 +174,11 @@ module Redoc
     property class_methods : Array(Def) = [] of Def
     property constructors : Array(Def) = [] of Def
     property instance_methods : Array(Def) = [] of Def
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
     def initialize(@name : String, @full_name : String, @constants : Array(Const), *,
-                   @type : String? = nil, @summary : String? = nil, @doc : String? = nil,
-                   @top_level : Bool = false)
+                   @type : String? = nil, @locations : Array(Location) = [] of Location,
+                   @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
     end
   end
 
@@ -183,20 +186,21 @@ module Redoc
     property name : String
     property full_name : String
     property type : String
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
     def initialize(@name : String, @full_name : String, @type : String, *,
-                   @summary : String? = nil, @doc : String? = nil,
-                   @top_level : Bool = false)
+                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
     end
   end
 
   class Annotation < Type
     property name : String
     property full_name : String
-    property locations : Array(Location) = [] of Location
+    property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *, @summary : String? = nil,
+    def initialize(@name : String, @full_name : String, *,
+                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
   end
