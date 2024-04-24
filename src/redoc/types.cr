@@ -21,6 +21,62 @@ module Redoc
     # :nodoc:
     def initialize(@name, @description)
     end
+
+    def resolve?(pattern : String) : Type?
+      namespace, symbol, instance = Redoc.parse_query pattern
+
+      if namespace.empty?
+        return @defs.find { |d| d.name == symbol }
+      end
+
+      unless symbol && namespace.size == 1
+        if const = @constants.find { |c| c.name == namespace[0] }
+          return const
+        end
+      end
+
+      return unless type = recurse self, namespace
+      return type unless symbol
+
+      if instance
+        if type.responds_to?(:instance_methods)
+          return type.instance_methods.find { |c| c.name == symbol }
+        end
+      else
+        if type.responds_to?(:constructors)
+          if method = type.constructors.find { |c| c.name == symbol }
+            return method
+          end
+        end
+
+        if type.responds_to?(:class_methods)
+          return type.class_methods.find { |c| c.name == symbol }
+        end
+      end
+    end
+
+    private def recurse(namespace : Namespace, names : Array(String)) : Type?
+      if names.size == 1
+        if const = namespace.constants.find { |c| c.name == names[0] }
+          return const
+        end
+      end
+
+      {% for type in %w[modules classes structs] %}
+        if type = namespace.{{type.id}}.find { |t| t.name == names[0] }
+          return type if names.size == 1
+          names.shift
+          return recurse type, names
+        end
+      {% end %}
+
+      {% for type in %w[enums aliases annotations] %}
+        if type = namespace.{{type.id}}.find { |t| t.name == names[0] }
+          return if names.size > 1
+          return type
+        end
+      {% end %}
+    end
   end
 
   struct Location
