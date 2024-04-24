@@ -65,6 +65,7 @@ module Redoc
       getter? abstract : Bool
       getter superclass : TypeRef?
       getter kind : Kind
+      getter aliased : String?
       getter ancestors : Array(TypeRef)?
       getter locations : Array(Location)
       getter repository_name : String
