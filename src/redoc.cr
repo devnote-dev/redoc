@@ -12,7 +12,8 @@ module Redoc
     All
   end
 
-  # Loads a project from _source_. This should be in the Crystal docs JSON format.
+  # Loads a project from _source_. This should be the generated JSON of a Crystal project
+  # which can be obtained from the `crystal docs --json` command.
   def self.load(source : String | IO) : Project
     program = Crystal::Program.from_json source
     Transformer.transform program
