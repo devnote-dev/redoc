@@ -4,7 +4,7 @@ require "./redoc/*"
 
 module Redoc
   VERSION       = "0.1.0"
-  QUERY_PATTERN = /^(?<ns>(?:::)?[A-Z_]{1,}(?:\w+|::)+)?(?:(?<scp>\.|#|\s+)?(?<sym>[a-zA-Z_]{1,}[\w!?=]|[!?<>^+\-~\/*&%|`]|(?:!|=)(?:=|~)|===|<=>|<<|>>|\/\/|\*\*|\[\]=?))?$/
+  QUERY_PATTERN = /^(?<ns>(?:(?:::)?[A-Z_]\w*)+)?(?<scp>\.|#)?(?<sym>(?:[a-z_]\w*(?:\?|!|=)?|[~+<|>%&^`*\-\/]|=(?:=|~)|!(?:=|~)?|<<|>>|\*\*|\/\/|===|<=>|\[\]=?))?$/
 
   enum QueryKind
     Class
@@ -46,12 +46,10 @@ module Redoc
     symbol = match["sym"]?
     namespace = match["ns"]?.try(&.split("::", remove_empty: true)) || [] of String
 
-    if namespace.empty? || symbol && /#|[^\w]+/.matches? symbol
-      kind = QueryKind::All
-    elsif match["scp"]? == "#"
-      kind = QueryKind::Instance
-    else
-      kind = QueryKind::Class
+    case match["scp"]?
+    when "." then kind = QueryKind::Class
+    when "#" then kind = QueryKind::Instance
+    else          kind = QueryKind::All
     end
 
     {namespace, symbol, kind}
