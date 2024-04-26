@@ -92,22 +92,9 @@ module Redoc
     # project.resolve?(["Regex"], "=~", :class)    # => nil
     # project.resolve?(["Regex"], "=~", :instance) # => #<Redoc::Def:...>
     # ```
-    #
-    # This method has a special edge-case when _namespace_ is empty but _symbol_ is not.
-    # In case the symbol references a method on `Object` which isn't actually defined in
-    # the top-level namespace but is accessible in it, this method inserts "Object" into
-    # _namespace_ which will follow the lookup chain to resolve _symbol_.
-    #
-    # ```
-    # project.resolve?(%w[], "property", :all) # => #<Redoc::Macro:...>
-    # ```
     def resolve?(namespace : Array(String), symbol : String?, kind : QueryKind) : Type?
       if namespace.empty?
-        if method = @defs.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
-          return method
-        end
-
-        namespace << "Object"
+        return @defs.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
       end
 
       unless symbol && namespace.size == 1
