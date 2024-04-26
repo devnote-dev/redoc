@@ -73,7 +73,7 @@ module Redoc
         cls = {{type.id}}.new(
           type.name,
           type.full_name,
-          abstract: false,
+          abstract: type.abstract?,
           locations: type.locations,
           summary: type.summary,
           doc: type.doc,
