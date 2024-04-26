@@ -58,11 +58,11 @@ describe Redoc do
     end
 
     it "disallows invalid identifiers" do
-      expect_raises(Exception) do
+      expect_raises(Error) do
         Redoc.parse_query "::puts"
       end
 
-      expect_raises(Exception) do
+      expect_raises(Error) do
         Redoc.parse_query "puts::"
       end
     end

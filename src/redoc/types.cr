@@ -47,7 +47,7 @@ module Redoc
     # project.resolve "VERSION" # => #<Redoc::Const:...>
     # ```
     def resolve(pattern : String) : Type
-      resolve(pattern) || raise "Type or symbol not found"
+      resolve?(pattern) || raise Error.new "Type or symbol not found"
     end
 
     # Same as `resolve` but returns `nil` if no type or symbol is found.

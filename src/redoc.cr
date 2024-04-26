@@ -6,6 +6,9 @@ module Redoc
   VERSION       = "0.1.0"
   QUERY_PATTERN = /^(?<ns>(?:(?:::)?[A-Z_]\w*)+)?(?<scp>\.|#)?(?<sym>(?:[a-z_]\w*(?:\?|!|=)?|[~+<|>%&^`*\-\/]|=(?:=|~)|!(?:=|~)?|<<|>>|\*\*|\/\/|===|<=>|\[\]=?))?$/
 
+  class Error < Exception
+  end
+
   enum QueryKind
     Class
     Instance
@@ -56,8 +59,8 @@ module Redoc
     {namespace, symbol, kind}
   end
 
-  # Same as `parse_query?` but raises an `Exception` if _pattern_ is invalid.
+  # Same as `parse_query?` but raises an `Error` if _pattern_ is invalid.
   def self.parse_query(pattern : String) : {Array(String), String?, QueryKind}
-    parse_query?(pattern) || raise "Invalid query pattern format"
+    parse_query?(pattern) || raise Error.new "Invalid query pattern format"
   end
 end
