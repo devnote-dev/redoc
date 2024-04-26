@@ -155,6 +155,42 @@ module Redoc
         end
       {% end %}
     end
+
+    def resolve_all(pattern : String) : Array(Type)
+      namespace, symbol, kind = Redoc.parse_query pattern
+      raise Error.new "Missing symbol pattern in query" unless symbol
+
+      resolve_all namespace, symbol, kind
+    end
+
+    def resolve_all(namespace : Array(String), symbol : String, kind : QueryKind) : Array(Type)
+      type = resolve? namespace, nil, kind
+      raise Error.new "Type or symbol not found" unless type
+
+      found = [] of Type
+
+      if kind.class? || kind.all?
+        if type.responds_to?(:constructors)
+          found += type.constructors.select { |m| m.name == symbol }
+        end
+
+        if type.responds_to?(:class_methods)
+          found += type.class_methods.select { |m| m.name == symbol }
+        end
+
+        if type.responds_to?(:macros)
+          found += type.macros.select { |m| m.name == symbol }
+        end
+      end
+
+      if kind.instance? || kind.all?
+        if type.responds_to?(:instance_methods)
+          found += type.instance_methods.select { |m| m.name == symbol }
+        end
+      end
+
+      found
+    end
   end
 
   # Represents a type's location in a project.
