@@ -423,8 +423,8 @@ module Redoc
     property params : Array(Parameter)
     @[JSON::Field(emit_null: true)]
     property return_type : String?
+    property free_vars : Set(String)
     property? abstract : Bool
-    property? generic : Bool
     property? yields : Bool
     property location : Location?
 
@@ -443,12 +443,26 @@ module Redoc
         params << Parameter.new(arg).tap &.block = true
       end
 
+      if str = method.args_string
+        if str.includes?("forall")
+          free_vars = str
+            .split("forall")[1]
+            .gsub(' ', "")
+            .split(',')
+            .to_set
+        else
+          free_vars = Set(String).new
+        end
+      else
+        free_vars = Set(String).new
+      end
+
       new(
         method.name,
         params: params,
         return_type: method.def.return_type,
+        free_vars: free_vars,
         abstract: method.abstract?,
-        generic: false,
         yields: !!method.def.yields,
         location: method.location,
         summary: method.summary,
@@ -458,10 +472,14 @@ module Redoc
     end
 
     def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
-                   @return_type : String? = nil, @abstract : Bool = false,
-                   @generic : Bool = false, @yields : Bool = false,
+                   @return_type : String? = nil, @free_vars : Set(String) = Set(String).new,
+                   @abstract : Bool = false, @yields : Bool = false,
                    @location : Location? = nil, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
+    end
+
+    def generic? : Bool
+      !@free_vars.empty?
     end
   end
 
