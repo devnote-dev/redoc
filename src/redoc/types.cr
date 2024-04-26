@@ -456,7 +456,7 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Parameter) = [] of Param,
+    def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
                    @return_type : String? = nil, @abstract : Bool = false,
                    @generic : Bool = false, @yields : Bool = false,
                    @location : Location? = nil, @summary : String? = nil,
@@ -472,6 +472,18 @@ module Redoc
 
     def self.new(method : Crystal::Def, top_level : Bool)
       params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
+
+      if index = method.def.splat_index
+        params[index].splat = true
+      end
+
+      if arg = method.def.double_splat
+        params << Parameter.new(arg).tap &.double_splat = true
+      end
+
+      if arg = method.def.block_arg
+        params << Parameter.new(arg).tap &.block = true
+      end
 
       new(
         method.name,
