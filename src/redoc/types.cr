@@ -398,8 +398,9 @@ module Redoc
     include JSON::Serializable
 
     property name : String
-    @[JSON::Field(emit_null: true)]
-    property external_name : String?
+    # @[JSON::Field(emit_null: true)]
+    # property external_name : String?
+    # property internal_name : String?
     @[JSON::Field(emit_null: true)]
     property type : String?
     @[JSON::Field(emit_null: true)]
@@ -409,10 +410,10 @@ module Redoc
     property? double_splat : Bool
 
     def self.new(arg : Crystal::MetaArg)
-      new(arg.name, arg.external_name, arg.restriction.presence)
+      new(arg.external_name, arg.restriction.presence)
     end
 
-    def initialize(@name, @external_name, @type, @default_value = nil)
+    def initialize(@name, @type, @default_value = nil)
       @block = @splat = @double_splat = false
     end
   end
