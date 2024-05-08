@@ -53,6 +53,12 @@ module Redoc
         top_level: top_level,
       )
 
+      if constants = type.constants
+        constants.each do |const|
+          mod.constants << Const.new(const, false)
+        end
+      end
+
       if included = type.included_modules
         mod.includes = included
       end
@@ -80,6 +86,12 @@ module Redoc
           top_level: top_level,
         )
         cls.parent = type.superclass
+
+        if constants = type.constants
+          constants.each do |const|
+            cls.constants << Const.new(const, false)
+          end
+        end
 
         if ancestors = type.ancestors
           cls.ancestors = ancestors
