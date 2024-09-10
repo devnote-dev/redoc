@@ -164,12 +164,13 @@ module Redoc
     end
 
     def resolve_all(namespace : Array(String), symbol : String, kind : QueryKind) : Array(Type)
-      type = resolve? namespace, nil, kind
-      raise Error.new "Type or symbol not found" unless type
+      unless type = resolve?(namespace, nil, kind)
+        return @defs.select { |d| d.name == symbol } + @macros.select { |m| m.name == symbol }
+      end
 
       found = [] of Type
 
-      if kind.class? || kind.all?
+      if kind.all? || kind.class?
         if type.responds_to?(:constructors)
           found += type.constructors.select { |m| m.name == symbol }
         end
@@ -183,7 +184,7 @@ module Redoc
         end
       end
 
-      if kind.instance? || kind.all?
+      if kind.all? || kind.instance?
         if type.responds_to?(:instance_methods)
           found += type.instance_methods.select { |m| m.name == symbol }
         end
