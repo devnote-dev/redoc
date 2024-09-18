@@ -10,17 +10,17 @@ module Redoc
     property annotations : Array(Annotation) = [] of Annotation
   end
 
-  # Represents a project (known as _Program_ in the Crystal compiler). This contains the
-  # name and description of the project, top-level definitions (constants, macros and
-  # methods), and encapsulates all types defined and documented in the project.
-  class Project
+  # Represents a library (known as _Program_ in the Crystal compiler). This contains the
+  # name and description of the library, top-level definitions (constants, macros and
+  # methods), and encapsulates all types defined and documented in the library.
+  class Library
     include JSON::Serializable
     include Namespace
 
-    # The name of the project.
+    # The name of the library.
     getter name : String
 
-    # The description of the project.
+    # The description of the library.
     getter description : String
 
     # An array of top-level methods.
@@ -33,18 +33,18 @@ module Redoc
     def initialize(@name, @description)
     end
 
-    # Resolves a query _pattern_ to a type in the project. This uses the Crystal path
+    # Resolves a query _pattern_ to a type in the library. This uses the Crystal path
     # format to denote constants from symbols/identifiers. Raises if the pattern is
     # invalid or no type or symbol is found.
     #
     # ```
     # require "redoc"
     #
-    # project = File.open "./source.json" do |file|
+    # library = File.open "./source.json" do |file|
     #   Redoc.load file
     # end
     #
-    # project.resolve "VERSION" # => #<Redoc::Const:...>
+    # library.resolve "VERSION" # => #<Redoc::Const:...>
     # ```
     def resolve(pattern : String) : Type
       resolve?(pattern) || raise Error.new "Type or symbol not found"
@@ -58,12 +58,12 @@ module Redoc
     # ```
     # require "redoc"
     #
-    # project = File.open "./source.json" do |file|
+    # library = File.open "./source.json" do |file|
     #   Redoc.load file
     # end
     #
-    # project.resolve? "UNKNOWN"   # => nil
-    # project.resolve? "::unknown" # => raises Exception
+    # library.resolve? "UNKNOWN"   # => nil
+    # library.resolve? "::unknown" # => raises Exception
     # ```
     def resolve?(pattern : String) : Type?
       resolve? *Redoc.parse_query pattern
@@ -85,12 +85,12 @@ module Redoc
     # ```
     # require "redoc"
     #
-    # project = File.open "./source.json" do |file|
+    # library = File.open "./source.json" do |file|
     #   Redoc.load file
     # end
     #
-    # project.resolve?(["Regex"], "=~", :class)    # => nil
-    # project.resolve?(["Regex"], "=~", :instance) # => #<Redoc::Def:...>
+    # library.resolve?(["Regex"], "=~", :class)    # => nil
+    # library.resolve?(["Regex"], "=~", :instance) # => #<Redoc::Def:...>
     # ```
     def resolve?(namespace : Array(String), symbol : String?, kind : QueryKind) : Type?
       if namespace.empty?
@@ -194,7 +194,7 @@ module Redoc
     end
   end
 
-  # Represents a type's location in a project.
+  # Represents a type's location in a library.
   struct Location
     include JSON::Serializable
 
@@ -229,7 +229,7 @@ module Redoc
     getter kind : Kind
   end
 
-  # Represents all types in a Crystal project. This is mainly used internally in Redoc
+  # Represents all types in a Crystal library. This is mainly used internally in Redoc
   # for transformation and type resolution.
   abstract class Type
     include JSON::Serializable

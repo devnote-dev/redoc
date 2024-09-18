@@ -15,15 +15,15 @@ module Redoc
     All
   end
 
-  # Loads a project from _source_. This should be the generated JSON of a Crystal project
+  # Loads a library from _source_. This should be the generated JSON of a Crystal library
   # which can be obtained from the `crystal docs --json` command.
-  def self.load(source : String | IO) : Project
+  def self.load(source : String | IO) : Library
     program = Crystal::Program.from_json source
     Transformer.transform program
   end
 
   # Parses a query from _pattern_. Returns an array of strings representing the namespace,
-  # a nilable string representing the symbol, and the query kind (see `Project#resolve?`).
+  # a nilable string representing the symbol, and the query kind (see `Library#resolve?`).
   # The _pattern_ is expected to be in Crystal path format which is defined as follows:
   #
   # - "::" is used for namespace accessors

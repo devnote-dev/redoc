@@ -1,35 +1,35 @@
 module Redoc
   # :nodoc:
   module Transformer
-    def self.transform(main : Crystal::Program) : Project
-      project = Project.new main.repository_name, main.body
-      transform project, main.program
+    def self.transform(main : Crystal::Program) : Library
+      library = Library.new main.repository_name, main.body
+      transform library, main.program
     end
 
-    private def self.transform(project : Project, top_level : Crystal::Type) : Project
+    private def self.transform(library : Library, top_level : Crystal::Type) : Library
       if constants = top_level.constants
         constants.each do |const_def|
-          project.constants << Const.new(const_def, true)
+          library.constants << Const.new(const_def, true)
         end
       end
 
       if class_methods = top_level.class_methods
         class_methods.each do |method|
-          project.defs << Def.new(method, true)
+          library.defs << Def.new(method, true)
         end
       end
 
       if macros = top_level.macros
         macros.each do |method|
-          project.macros << Macro.new(method, true)
+          library.macros << Macro.new(method, true)
         end
       end
 
       if types = top_level.types
-        types.each { |inner| transform inner, project, true }
+        types.each { |inner| transform inner, library, true }
       end
 
-      project
+      library
     end
 
     private def self.transform(type : Crystal::Type, namespace : Namespace, top_level : Bool) : Nil
