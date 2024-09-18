@@ -210,13 +210,14 @@ module Redoc
   end
 
   # Represents a type reference in a namespaced type.
-  struct TypeRef
+  class TypeRef
     include JSON::Serializable
 
     enum Kind
       Module
       Class
       Struct
+      Enum
     end
 
     # The name of the referenced type.
@@ -227,6 +228,10 @@ module Redoc
 
     # The kind of the referenced type.
     getter kind : Kind
+
+    # :nodoc:
+    def initialize(@name, @full_name, @kind)
+    end
   end
 
   # Represents all types in a Crystal library. This is mainly used internally in Redoc
@@ -249,19 +254,22 @@ module Redoc
   class Const < Type
     property name : String
     property value : String
+    property parent : TypeRef?
 
-    def self.new(const : Crystal::ConstDef, top_level : Bool)
+    def self.new(const : Crystal::ConstDef, ref : TypeRef?)
       new(
         const.name,
         const.value,
+        parent: ref,
         summary: const.summary,
         doc: const.doc,
-        top_level: top_level
+        top_level: ref.nil?
       )
     end
 
-    def initialize(@name : String, @value : String, *, @summary : String? = nil,
-                   @doc : String? = nil, @top_level : Bool = false)
+    def initialize(@name : String, @value : String, *, @parent : TypeRef? = nil,
+                   @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 
@@ -427,9 +435,10 @@ module Redoc
     property free_vars : Set(String)
     property? abstract : Bool
     property? yields : Bool
+    property parent : TypeRef?
     property location : Location?
 
-    def self.new(method : Crystal::Def, top_level : Bool)
+    def self.new(method : Crystal::Def, ref : TypeRef?)
       params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
       if index = method.def.splat_index
@@ -465,16 +474,17 @@ module Redoc
         free_vars: free_vars,
         abstract: method.abstract?,
         yields: !!method.def.yields,
+        parent: ref,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
-        top_level: top_level,
+        top_level: ref.nil?,
       )
     end
 
     def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
                    @return_type : String? = nil, @free_vars : Set(String) = Set(String).new,
-                   @abstract : Bool = false, @yields : Bool = false,
+                   @abstract : Bool = false, @yields : Bool = false, @parent : TypeRef? = nil,
                    @location : Location? = nil, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
@@ -487,10 +497,11 @@ module Redoc
   class Macro < Type
     property name : String
     property params : Array(Parameter)
+    property parent : TypeRef?
     @[JSON::Field(emit_null: true)]
     property location : Location?
 
-    def self.new(method : Crystal::Def, top_level : Bool)
+    def self.new(method : Crystal::Def, ref : TypeRef?)
       params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
       if index = method.def.splat_index
@@ -508,16 +519,18 @@ module Redoc
       new(
         method.name,
         params: params,
+        parent: ref,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
-        top_level: top_level,
+        top_level: ref.nil?,
       )
     end
 
     def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
-                   @location : Location? = nil, @summary : String? = nil,
-                   @doc : String? = nil, @top_level : Bool = false)
+                   @parent : TypeRef? = nil, @location : Location? = nil,
+                   @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
   end
 end

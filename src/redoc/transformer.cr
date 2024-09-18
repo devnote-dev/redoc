@@ -9,19 +9,19 @@ module Redoc
     private def self.transform(library : Library, top_level : Crystal::Type) : Library
       if constants = top_level.constants
         constants.each do |const_def|
-          library.constants << Const.new(const_def, true)
+          library.constants << Const.new(const_def, nil)
         end
       end
 
       if class_methods = top_level.class_methods
         class_methods.each do |method|
-          library.defs << Def.new(method, true)
+          library.defs << Def.new(method, nil)
         end
       end
 
       if macros = top_level.macros
         macros.each do |method|
-          library.macros << Macro.new(method, true)
+          library.macros << Macro.new(method, nil)
         end
       end
 
@@ -52,10 +52,11 @@ module Redoc
         doc: type.doc,
         top_level: top_level,
       )
+      ref = TypeRef.new(mod.name, mod.full_name, :module)
 
       if constants = type.constants
         constants.each do |const|
-          mod.constants << Const.new(const, false)
+          mod.constants << Const.new(const, ref)
         end
       end
 
@@ -70,14 +71,14 @@ module Redoc
       {% for method in %w[class_methods instance_methods] %}
         if methods = type.{{method.id}}
           methods.each do |method|
-            mod.{{method.id}} << Def.new(method, false)
+            mod.{{method.id}} << Def.new(method, ref)
           end
         end
       {% end %}
 
       if methods = type.macros
         methods.each do |method|
-          mod.macros << Macro.new(method, false)
+          mod.macros << Macro.new(method, ref)
         end
       end
 
@@ -100,10 +101,11 @@ module Redoc
           top_level: top_level,
         )
         cls.parent = type.superclass
+        ref = TypeRef.new(cls.name, cls.full_name, :{{type.downcase.id}})
 
         if constants = type.constants
           constants.each do |const|
-            cls.constants << Const.new(const, false)
+            cls.constants << Const.new(const, ref)
           end
         end
 
@@ -122,14 +124,14 @@ module Redoc
         {% for method in %w[constructors class_methods instance_methods] %}
           if methods = type.{{method.id}}
             methods.each do |method|
-              cls.{{method.id}} << Def.new(method, false)
+              cls.{{method.id}} << Def.new(method, ref)
             end
           end
         {% end %}
 
         if methods = type.macros
           methods.each do |method|
-            cls.macros << Macro.new(method, false)
+            cls.macros << Macro.new(method, ref)
           end
         end
 
@@ -143,8 +145,10 @@ module Redoc
 
     private def self.transform_enum(type : Crystal::Type, top_level : Bool) : Enum
       {% begin %}
+        ref = TypeRef.new(type.name, type.full_name, :enum)
+
         if const_defs = type.constants
-          constants = const_defs.map { |c| Const.new(c, false) }
+          constants = const_defs.map { |c| Const.new(c, ref) }
         else
           constants = [] of Const
         end
@@ -166,7 +170,7 @@ module Redoc
         {% for method in %w[constructors class_methods instance_methods] %}
           if methods = type.{{method.id}}
             methods.each do |method|
-              %enum.{{method.id}} << Def.new(method, false)
+              %enum.{{method.id}} << Def.new(method, ref)
             end
           end
         {% end %}
