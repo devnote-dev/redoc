@@ -67,6 +67,20 @@ module Redoc
         mod.extends = extended
       end
 
+      {% for method in %w[class_methods instance_methods] %}
+        if methods = type.{{method.id}}
+          methods.each do |method|
+            mod.{{method.id}} << Def.new(method, false)
+          end
+        end
+      {% end %}
+
+      if methods = type.macros
+        methods.each do |method|
+          mod.macros << Macro.new(method, false)
+        end
+      end
+
       if types = type.types
         types.each { |inner| transform inner, mod, false }
       end
