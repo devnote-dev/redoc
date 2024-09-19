@@ -165,28 +165,30 @@ module Redoc
 
     def resolve_all(namespace : Array(String), symbol : String, kind : QueryKind) : Array(Type)
       unless type = resolve?(namespace, nil, kind)
-        return @defs.select { |d| d.name == symbol } + @macros.select { |m| m.name == symbol }
+        return ([] of Type)
+          .concat(@defs.select { |d| d.name == symbol })
+          .concat(@macros.select { |m| m.name == symbol })
       end
 
       found = [] of Type
 
       if kind.all? || kind.class?
         if type.responds_to?(:constructors)
-          found += type.constructors.select { |m| m.name == symbol }
+          found.concat type.constructors.select { |m| m.name == symbol }
         end
 
         if type.responds_to?(:class_methods)
-          found += type.class_methods.select { |m| m.name == symbol }
+          found.concat type.class_methods.select { |m| m.name == symbol }
         end
 
         if type.responds_to?(:macros)
-          found += type.macros.select { |m| m.name == symbol }
+          found.concat type.macros.select { |m| m.name == symbol }
         end
       end
 
       if kind.all? || kind.instance?
         if type.responds_to?(:instance_methods)
-          found += type.instance_methods.select { |m| m.name == symbol }
+          found.concat type.instance_methods.select { |m| m.name == symbol }
         end
       end
 
