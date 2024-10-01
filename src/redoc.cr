@@ -3,16 +3,19 @@ require "json"
 require "./redoc/*"
 
 module Redoc
-  VERSION       = "0.1.0"
-  QUERY_PATTERN = /^(?<ns>(?:(?:::)?[A-Z_]\w*)+)?(?<scp>\.|#)?(?<sym>(?:[a-z_]\w*(?:\?|!|=)?|[~+<|>%&^`*\-\/]|=(?:=|~)|!(?:=|~)?|<<|>>|\*\*|\/\/|===|<=>|\[\]=?))?$/
+  VERSION = "0.1.0"
+
+  METHOD_PATTERN = /(?:(?:_\w|[a-z])\w*(?:!|\?|=)?|[-+^`~%|]|\*\*?|\/\/?|!(?:=|~)?|=(?:=|==|~)?|<(?:<|=)?|>(?:>|=)?|<=>|&(?:\+|-|\*)?|\[](?:\?|=)?)/
+  QUERY_PATTERN  = /^(?:(?<dname>(?:::)?#{METHOD_PATTERN})|(?<tpath>(?:::)?[A-Z]\w*)+(?:(?<tscope>\.|#)(?<tname>#{METHOD_PATTERN}))?)$/
 
   class Error < Exception
   end
 
   enum QueryKind
+    All
+    TopLevel
     Class
     Instance
-    All
   end
 
   # Loads a library from _source_. This should be the generated JSON of a Crystal library
@@ -47,16 +50,18 @@ module Redoc
   def self.parse_query?(pattern : String) : {Array(String), String?, QueryKind}?
     return unless match = QUERY_PATTERN.match pattern
 
-    symbol = match["sym"]?
-    namespace = match["ns"]?.try(&.split("::", remove_empty: true)) || [] of String
-
-    case match["scp"]?
-    when "." then kind = QueryKind::Class
-    when "#" then kind = QueryKind::Instance
-    else          kind = QueryKind::All
+    if dname = match["dname"]?
+      return [] of String, dname, (dname.starts_with?("::") ? QueryKind::TopLevel : QueryKind::All)
     end
 
-    {namespace, symbol, kind}
+    return unless tpath = match["tpath"]?
+    kind = case match["scope"]?
+           when "." then QueryKind::Class
+           when "#" then QueryKind::Instance
+           else          QueryKind::All
+           end
+
+    {tpath.split("::", remove_empty: true), match["tname"]?, kind}
   end
 
   # Same as `parse_query?` but raises an `Error` if _pattern_ is invalid.
