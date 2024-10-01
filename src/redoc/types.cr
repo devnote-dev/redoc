@@ -1,6 +1,8 @@
 module Redoc
   # Represents a namespace type in Crystal. This can be a module, class or struct.
   module Namespace
+    property html_id : String { raise "unreachable" }
+    property path : String { raise "unreachable" }
     property constants : Array(Const) = [] of Const
     property modules : Array(Module) = [] of Module
     property classes : Array(Class) = [] of Class
@@ -222,6 +224,9 @@ module Redoc
       Enum
     end
 
+    # The HTML ID of the referenced type.
+    getter html_id : String
+
     # The name of the referenced type.
     getter name : String
 
@@ -232,7 +237,7 @@ module Redoc
     getter kind : Kind
 
     # :nodoc:
-    def initialize(@name, @full_name, @kind)
+    def initialize(@html_id, @name, @full_name, @kind)
     end
   end
 
@@ -288,7 +293,7 @@ module Redoc
     property macros : Array(Macro) = [] of Macro
     property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *,
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @locations : Array(Location) = [] of Location,
                    @summary : String? = nil, @doc : String?, @top_level : Bool = false)
     end
@@ -316,9 +321,9 @@ module Redoc
     property? abstract : Bool = false
     property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
-                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
-                   @doc : String?, @top_level : Bool = false)
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
+                   @abstract : Bool = false, @locations : Array(Location) = [] of Location,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -349,9 +354,9 @@ module Redoc
     property? abstract : Bool
     property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *, @abstract : Bool = false,
-                   @locations : Array(Location) = [] of Location, @summary : String? = nil,
-                   @doc : String?, @top_level : Bool = false)
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
+                   @abstract : Bool = false, @locations : Array(Location) = [] of Location,
+                   @summary : String? = nil, @doc : String?, @top_level : Bool = false)
       if @full_name.includes? '('
         @generics = @full_name
           .split('(')[1]
@@ -365,6 +370,8 @@ module Redoc
   end
 
   class Enum < Type
+    property html_id : String
+    property path : String
     property name : String
     property full_name : String
     @[JSON::Field(emit_null: true)]
@@ -376,30 +383,35 @@ module Redoc
     property instance_methods : Array(Def) = [] of Def
     property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, @constants : Array(Const), *,
-                   @type : String? = nil, @locations : Array(Location) = [] of Location,
-                   @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
-    end
-  end
-
-  class Alias < Type
-    property name : String
-    property full_name : String
-    property type : String
-    property locations : Array(Location)
-
-    def initialize(@name : String, @full_name : String, @type : String, *,
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String,
+                   @constants : Array(Const), *, @type : String? = nil,
                    @locations : Array(Location) = [] of Location, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
   end
 
+  class Alias < Type
+    property html_id : String
+    property path : String
+    property name : String
+    property full_name : String
+    property type : String
+    property locations : Array(Location)
+
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String,
+                   @type : String, *, @locations : Array(Location) = [] of Location,
+                   @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
+    end
+  end
+
   class Annotation < Type
+    property html_id : String
+    property path : String
     property name : String
     property full_name : String
     property locations : Array(Location)
 
-    def initialize(@name : String, @full_name : String, *,
+    def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @locations : Array(Location) = [] of Location, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
@@ -430,6 +442,7 @@ module Redoc
   end
 
   class Def < Type
+    property html_id : String
     property name : String
     property params : Array(Parameter)
     @[JSON::Field(emit_null: true)]
@@ -471,6 +484,7 @@ module Redoc
       end
 
       new(
+        method.html_id,
         method.name,
         params: params,
         return_type: method.def.return_type,
@@ -486,11 +500,12 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
-                   @return_type : String? = nil, @free_vars : Set(String) = Set(String).new,
-                   @abstract : Bool = false, @yields : Bool = false, @parent : TypeRef? = nil,
-                   @body : String? = nil, @location : Location? = nil, @summary : String? = nil,
-                   @doc : String? = nil, @top_level : Bool = false)
+    def initialize(@html_id : String, @name : String, *,
+                   @params : Array(Parameter) = [] of Parameter, @return_type : String? = nil,
+                   @free_vars : Set(String) = Set(String).new, @abstract : Bool = false,
+                   @yields : Bool = false, @parent : TypeRef? = nil, @body : String? = nil,
+                   @location : Location? = nil, @summary : String? = nil, @doc : String? = nil,
+                   @top_level : Bool = false)
     end
 
     def generic? : Bool
@@ -499,6 +514,7 @@ module Redoc
   end
 
   class Macro < Type
+    property html_id : String
     property name : String
     property params : Array(Parameter)
     property parent : TypeRef?
@@ -522,6 +538,7 @@ module Redoc
       end
 
       new(
+        method.html_id,
         method.name,
         params: params,
         parent: ref,
@@ -533,7 +550,8 @@ module Redoc
       )
     end
 
-    def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
+    def initialize(@html_id : String, @name : String, *,
+                   @params : Array(Parameter) = [] of Parameter,
                    @parent : TypeRef? = nil, @body : String? = nil,
                    @location : Location? = nil, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)

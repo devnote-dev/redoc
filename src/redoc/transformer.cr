@@ -45,6 +45,8 @@ module Redoc
 
     private def self.transform_module(type : Crystal::Type, top_level : Bool) : Module
       mod = Module.new(
+        type.html_id,
+        type.path,
         type.name,
         type.full_name,
         locations: type.locations,
@@ -52,7 +54,7 @@ module Redoc
         doc: type.doc,
         top_level: top_level,
       )
-      ref = TypeRef.new(mod.name, mod.full_name, :module)
+      ref = TypeRef.new(mod.html_id, mod.name, mod.full_name, :module)
 
       if constants = type.constants
         constants.each do |const|
@@ -92,6 +94,8 @@ module Redoc
     {% for type in %w[Class Struct] %}
       private def self.transform_{{type.downcase.id}}(type : Crystal::Type, top_level : Bool) : {{type.id}}
         cls = {{type.id}}.new(
+          type.html_id,
+          type.path,
           type.name,
           type.full_name,
           abstract: type.abstract?,
@@ -101,7 +105,7 @@ module Redoc
           top_level: top_level,
         )
         cls.parent = type.superclass
-        ref = TypeRef.new(cls.name, cls.full_name, :{{type.downcase.id}})
+        ref = TypeRef.new(cls.html_id, cls.name, cls.full_name, :{{type.downcase.id}})
 
         if constants = type.constants
           constants.each do |const|
@@ -145,7 +149,8 @@ module Redoc
 
     private def self.transform_enum(type : Crystal::Type, top_level : Bool) : Enum
       {% begin %}
-        ref = TypeRef.new(type.name, type.full_name, :enum)
+        type.responds_to?(:html_id) || raise "BUG: missing html_id for Crystal::Type enum"
+        ref = TypeRef.new(type.html_id, type.name, type.full_name, :enum)
 
         if const_defs = type.constants
           constants = const_defs.map { |c| Const.new(c, ref) }
@@ -154,6 +159,8 @@ module Redoc
         end
 
         %enum = Enum.new(
+          type.html_id,
+          type.path,
           type.name,
           type.full_name,
           constants,
@@ -181,6 +188,8 @@ module Redoc
 
     private def self.transform_alias(type : Crystal::Type, top_level : Bool) : Alias
       Alias.new(
+        type.html_id,
+        type.path,
         type.name,
         type.full_name,
         type.aliased.as(String),
@@ -193,6 +202,8 @@ module Redoc
 
     private def self.transform_annotation(type : Crystal::Type, top_level : Bool) : Annotation
       Annotation.new(
+        type.html_id,
+        type.path,
         type.name,
         type.full_name,
         locations: type.locations,

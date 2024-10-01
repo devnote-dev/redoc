@@ -31,6 +31,7 @@ module Redoc
       include JSON::Serializable
 
       getter name : String
+      getter html_id : String
       getter doc : String?
       getter summary : String?
       getter? abstract : Bool
@@ -65,6 +66,8 @@ module Redoc
     class Type
       include JSON::Serializable
 
+      getter html_id : String
+      getter path : String
       getter name : String
       getter full_name : String
       getter? abstract : Bool
