@@ -421,10 +421,10 @@ module Redoc
     property? double_splat : Bool
 
     def self.new(arg : Crystal::MetaArg)
-      new(arg.external_name, arg.restriction.presence)
+      new(arg.external_name, arg.restriction.presence, arg.default_value)
     end
 
-    def initialize(@name, @type, @default_value = nil)
+    def initialize(@name, @type, @default_value)
       @block = @splat = @double_splat = false
     end
   end
@@ -438,6 +438,7 @@ module Redoc
     property? abstract : Bool
     property? yields : Bool
     property parent : TypeRef?
+    property body : String?
     property location : Location?
 
     def self.new(method : Crystal::Def, ref : TypeRef?)
@@ -477,6 +478,7 @@ module Redoc
         abstract: method.abstract?,
         yields: !!method.def.yields,
         parent: ref,
+        body: method.def.body.presence,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
@@ -487,7 +489,7 @@ module Redoc
     def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
                    @return_type : String? = nil, @free_vars : Set(String) = Set(String).new,
                    @abstract : Bool = false, @yields : Bool = false, @parent : TypeRef? = nil,
-                   @location : Location? = nil, @summary : String? = nil,
+                   @body : String? = nil, @location : Location? = nil, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
     end
 
@@ -500,6 +502,7 @@ module Redoc
     property name : String
     property params : Array(Parameter)
     property parent : TypeRef?
+    property body : String?
     @[JSON::Field(emit_null: true)]
     property location : Location?
 
@@ -522,6 +525,7 @@ module Redoc
         method.name,
         params: params,
         parent: ref,
+        body: method.def.body.presence,
         location: method.location,
         summary: method.summary,
         doc: method.doc,
@@ -530,9 +534,9 @@ module Redoc
     end
 
     def initialize(@name : String, *, @params : Array(Parameter) = [] of Parameter,
-                   @parent : TypeRef? = nil, @location : Location? = nil,
-                   @summary : String? = nil, @doc : String? = nil,
-                   @top_level : Bool = false)
+                   @parent : TypeRef? = nil, @body : String? = nil,
+                   @location : Location? = nil, @summary : String? = nil,
+                   @doc : String? = nil, @top_level : Bool = false)
     end
   end
 end

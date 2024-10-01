@@ -46,6 +46,7 @@ module Redoc
       getter name : String
       getter external_name : String
       getter restriction : String
+      getter default_value : String?
     end
 
     struct MetaDef
