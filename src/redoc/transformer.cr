@@ -15,7 +15,7 @@ module Redoc
 
       if class_methods = top_level.class_methods
         class_methods.each do |method|
-          library.defs << Def.new(method, nil)
+          library.methods << Def.new(method, nil)
         end
       end
 

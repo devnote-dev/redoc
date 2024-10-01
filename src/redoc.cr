@@ -1,5 +1,4 @@
 require "json"
-
 require "./redoc/*"
 
 module Redoc
@@ -11,7 +10,7 @@ module Redoc
   class Error < Exception
   end
 
-  enum QueryKind
+  enum QueryScope
     All
     TopLevel
     Class
@@ -26,7 +25,7 @@ module Redoc
   end
 
   # Parses a query from _pattern_. Returns an array of strings representing the namespace,
-  # a nilable string representing the symbol, and the query kind (see `Library#resolve?`).
+  # a nilable string representing the symbol, and the query scope (see `Library#resolve?`).
   # The _pattern_ is expected to be in Crystal path format which is defined as follows:
   #
   # - "::" is used for namespace accessors
@@ -36,38 +35,42 @@ module Redoc
   # The following is in valid format:
   #
   # - `puts`
+  # - `::puts`
   # - `String.build`
-  # - `Char::Reader#pos`
+  # - `::Char::Reader#pos`
+  #
+  # This also supports operator methods and methods that end in `=`, `!` or `?`:
+  #
+  # - `!`
+  # - `Regex#=~`
+  # - `Array#[]?`
   #
   # The following is in invalid format:
   #
-  # - `::raise`
+  # - `to_s.nil?`
   # - `IO.Memory`
   # - `JSON#Any`
-  #
-  # Additional tokens used in identifiers are allowed **only** after symbols or in place
-  # of a symbol (for example, `Array#<<` or `Log#level=`).
-  def self.parse_query?(pattern : String) : {Array(String), String?, QueryKind}?
+  def self.parse_query?(pattern : String) : {Array(String), String?, QueryScope}?
     return unless match = QUERY_PATTERN.match pattern
 
     if dname = match["dname"]?
-      kind = dname.starts_with?("::") ? QueryKind::TopLevel : QueryKind::All
+      scope = dname.starts_with?("::") ? QueryScope::TopLevel : QueryScope::All
 
-      return [] of String, dname.lchop("::"), kind
+      return [] of String, dname.lchop("::"), scope
     end
 
     return unless tpath = match["tpath"]?
-    kind = case match["scope"]?
-           when "." then QueryKind::Class
-           when "#" then QueryKind::Instance
-           else          QueryKind::All
-           end
+    scope = case match["tscope"]?
+            when "." then QueryScope::Class
+            when "#" then QueryScope::Instance
+            else          QueryScope::All
+            end
 
-    {tpath.split("::", remove_empty: true), match["tname"]?, kind}
+    {tpath.split("::", remove_empty: true), match["tname"]?, scope}
   end
 
   # Same as `parse_query?` but raises an `Error` if _pattern_ is invalid.
-  def self.parse_query(pattern : String) : {Array(String), String?, QueryKind}
+  def self.parse_query(pattern : String) : {Array(String), String?, QueryScope}
     parse_query?(pattern) || raise Error.new "Invalid query pattern format"
   end
 end

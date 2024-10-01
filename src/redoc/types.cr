@@ -26,7 +26,7 @@ module Redoc
     getter description : String
 
     # An array of top-level methods.
-    getter defs : Array(Def) = [] of Def
+    getter methods : Array(Def) = [] of Def
 
     # An array of top-level macros.
     getter macros : Array(Macro) = [] of Macro
@@ -73,16 +73,16 @@ module Redoc
 
     # Same as `resolve?` using unparsed inputs. The _namespace_ is an array of strings
     # representing the namespace path. The `symbol` is an identifier or operator and
-    # _kind_ is an enum value representing how _symbol_ should be looked up. Returns
+    # _scope_ is an enum value representing how _symbol_ should be looked up. Returns
     # `nil` if no type or symbol is found in the given _namespace_.
     #
     # WARNING: in most if not all cases you should use `resolve?` to ensure that input
     # parameters are correctly parsed. This method does _not_ do additional parsing or
     # validation of input parameters.
     #
-    # When _kind_ is set to `QueryKind::Class` only class methods (including
-    # constructors) and macros will be looked up, when set to `QueryKind::Instance` only
-    # instance methods are looked up, and when set to `QueryKind::All` both are checked.
+    # When _scope_ is set to `QueryScope::Class` only class methods (including
+    # constructors) and macros will be looked up, when set to `QueryScope::Instance` only
+    # instance methods are looked up, and when set to `QueryScope::All` both are checked.
     #
     # ```
     # require "redoc"
@@ -94,9 +94,9 @@ module Redoc
     # library.resolve?(["Regex"], "=~", :class)    # => nil
     # library.resolve?(["Regex"], "=~", :instance) # => #<Redoc::Def:...>
     # ```
-    def resolve?(namespace : Array(String), symbol : String?, kind : QueryKind) : Type?
+    def resolve?(namespace : Array(String), symbol : String?, scope : QueryScope) : Type?
       if namespace.empty?
-        return @defs.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
+        return @methods.find { |d| d.name == symbol } || @macros.find { |m| m.name == symbol }
       end
 
       unless symbol && namespace.size == 1
@@ -108,7 +108,7 @@ module Redoc
       return unless type = recurse self, namespace
       return type unless symbol
 
-      if kind.class? || kind.all?
+      if scope.class? || scope.all?
         if type.responds_to?(:constructors)
           if method = type.constructors.find { |c| c.name == symbol }
             return method
@@ -128,7 +128,7 @@ module Redoc
         end
       end
 
-      if kind.instance? || kind.all?
+      if scope.instance? || scope.all?
         if type.responds_to?(:instance_methods)
           return type.instance_methods.find { |c| c.name == symbol }
         end
@@ -159,22 +159,22 @@ module Redoc
     end
 
     def resolve_all(pattern : String) : Array(Type)
-      namespace, symbol, kind = Redoc.parse_query pattern
+      namespace, symbol, scope = Redoc.parse_query pattern
       raise Error.new "Missing symbol pattern in query" unless symbol
 
-      resolve_all namespace, symbol, kind
+      resolve_all namespace, symbol, scope
     end
 
-    def resolve_all(namespace : Array(String), symbol : String, kind : QueryKind) : Array(Type)
-      unless type = resolve?(namespace, nil, kind)
+    def resolve_all(namespace : Array(String), symbol : String, scope : QueryScope) : Array(Type)
+      unless type = resolve?(namespace, nil, scope)
         return ([] of Type)
-          .concat(@defs.select { |d| d.name == symbol })
+          .concat(@methods.select { |d| d.name == symbol })
           .concat(@macros.select { |m| m.name == symbol })
       end
 
       found = [] of Type
 
-      if kind.all? || kind.class?
+      if scope.all? || scope.class?
         if type.responds_to?(:constructors)
           found.concat type.constructors.select { |m| m.name == symbol }
         end
@@ -188,7 +188,7 @@ module Redoc
         end
       end
 
-      if kind.all? || kind.instance?
+      if scope.all? || scope.instance?
         if type.responds_to?(:instance_methods)
           found.concat type.instance_methods.select { |m| m.name == symbol }
         end
