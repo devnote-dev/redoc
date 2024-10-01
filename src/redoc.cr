@@ -51,7 +51,9 @@ module Redoc
     return unless match = QUERY_PATTERN.match pattern
 
     if dname = match["dname"]?
-      return [] of String, dname, (dname.starts_with?("::") ? QueryKind::TopLevel : QueryKind::All)
+      kind = dname.starts_with?("::") ? QueryKind::TopLevel : QueryKind::All
+
+      return [] of String, dname.lchop("::"), kind
     end
 
     return unless tpath = match["tpath"]?
