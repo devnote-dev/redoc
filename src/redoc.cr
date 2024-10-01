@@ -5,7 +5,7 @@ module Redoc
   VERSION = "0.1.0"
 
   METHOD_PATTERN = /(?:(?:_\w|[a-z])\w*(?:!|\?|=)?|[-+^`~%|]|\*\*?|\/\/?|!(?:=|~)?|=(?:=|==|~)?|<(?:<|=)?|>(?:>|=)?|<=>|&(?:\+|-|\*)?|\[](?:\?|=)?)/
-  QUERY_PATTERN  = /^(?:(?<dname>(?:::)?#{METHOD_PATTERN})|(?<tpath>(?:::)?[A-Z]\w*)+(?:(?<tscope>\.|#)(?<tname>#{METHOD_PATTERN}))?)$/
+  QUERY_PATTERN  = /^(?:(?<dname>(?:::)?#{METHOD_PATTERN})|(?<tpath>(?:(?:::)?[A-Z]\w*)+)(?:(?<tscope>\.|#)(?<tname>#{METHOD_PATTERN}))?)$/
 
   class Error < Exception
   end
