@@ -4,3 +4,6 @@ Globs:
 
 Metrics/CyclomaticComplexity:
   Enabled: false
+
+Naming/BlockParameterName:
+  Enabled: false
