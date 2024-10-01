@@ -83,6 +83,7 @@ module Redoc
     # When _scope_ is set to `QueryScope::Class` only class methods (including
     # constructors) and macros will be looked up, when set to `QueryScope::Instance` only
     # instance methods are looked up, and when set to `QueryScope::All` both are checked.
+    # Note that `QueryScope::TopLevel` has no effect in this method.
     #
     # ```
     # require "redoc"
@@ -108,7 +109,7 @@ module Redoc
       return unless type = recurse self, namespace
       return type unless symbol
 
-      if scope.class? || scope.all?
+      if scope.all? || scope.class?
         if type.responds_to?(:constructors)
           if method = type.constructors.find { |c| c.name == symbol }
             return method
@@ -128,7 +129,7 @@ module Redoc
         end
       end
 
-      if scope.instance? || scope.all?
+      if scope.all? || scope.instance?
         if type.responds_to?(:instance_methods)
           return type.instance_methods.find { |c| c.name == symbol }
         end
@@ -158,6 +159,19 @@ module Redoc
       {% end %}
     end
 
+    # Resolves all types in a library from a query _pattern_. This uses the Crystal path
+    # format to denote constants from symbols/identifiers. Raises if the _pattern_ is
+    # invalid.
+    #
+    # ```
+    # require "redoc"
+    #
+    # library = File.open "./source.json" do |file|
+    #   Redoc.load file
+    # end
+    #
+    # library.resolve_all "Any" # => [#<Redoc::Struct:...>, ...]
+    # ```
     def resolve_all(pattern : String) : Array(Type)
       namespace, symbol, scope = Redoc.parse_query pattern
       raise Error.new "Missing symbol pattern in query" unless symbol
@@ -165,6 +179,9 @@ module Redoc
       resolve_all namespace, symbol, scope
     end
 
+    # Same as `resolve_all` using unparsed inputs. The same scope semantics as `resolve?`
+    # also apply in this method with one exception: `QueryScope::TopLevel` will only
+    # check top-level methods (that is, methods and macros in the `Library`).
     def resolve_all(namespace : Array(String), symbol : String, scope : QueryScope) : Array(Type)
       unless type = resolve?(namespace, nil, scope)
         return ([] of Type)
@@ -274,6 +291,7 @@ module Redoc
       )
     end
 
+    # :nodoc:
     def initialize(@name : String, @value : String, *, @parent : TypeRef? = nil,
                    @summary : String? = nil, @doc : String? = nil,
                    @top_level : Bool = false)
@@ -293,6 +311,7 @@ module Redoc
     property macros : Array(Macro) = [] of Macro
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @locations : Array(Location) = [] of Location,
                    @summary : String? = nil, @doc : String?, @top_level : Bool = false)
@@ -321,6 +340,7 @@ module Redoc
     property? abstract : Bool = false
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @abstract : Bool = false, @locations : Array(Location) = [] of Location,
                    @summary : String? = nil, @doc : String?, @top_level : Bool = false)
@@ -354,6 +374,7 @@ module Redoc
     property? abstract : Bool
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @abstract : Bool = false, @locations : Array(Location) = [] of Location,
                    @summary : String? = nil, @doc : String?, @top_level : Bool = false)
@@ -383,6 +404,7 @@ module Redoc
     property instance_methods : Array(Def) = [] of Def
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String,
                    @constants : Array(Const), *, @type : String? = nil,
                    @locations : Array(Location) = [] of Location, @summary : String? = nil,
@@ -398,6 +420,7 @@ module Redoc
     property type : String
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String,
                    @type : String, *, @locations : Array(Location) = [] of Location,
                    @summary : String? = nil, @doc : String? = nil, @top_level : Bool = false)
@@ -411,6 +434,7 @@ module Redoc
     property full_name : String
     property locations : Array(Location)
 
+    # :nodoc:
     def initialize(@html_id : String, @path : String, @name : String, @full_name : String, *,
                    @locations : Array(Location) = [] of Location, @summary : String? = nil,
                    @doc : String? = nil, @top_level : Bool = false)
@@ -432,10 +456,12 @@ module Redoc
     property? splat : Bool
     property? double_splat : Bool
 
+    # :nodoc:
     def self.new(arg : Crystal::MetaArg)
       new(arg.external_name, arg.restriction.presence, arg.default_value)
     end
 
+    # :nodoc:
     def initialize(@name, @type, @default_value)
       @block = @splat = @double_splat = false
     end
@@ -454,6 +480,7 @@ module Redoc
     property body : String?
     property location : Location?
 
+    # :nodoc:
     def self.new(method : Crystal::Def, ref : TypeRef?)
       params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
@@ -500,6 +527,7 @@ module Redoc
       )
     end
 
+    # :nodoc:
     def initialize(@html_id : String, @name : String, *,
                    @params : Array(Parameter) = [] of Parameter, @return_type : String? = nil,
                    @free_vars : Set(String) = Set(String).new, @abstract : Bool = false,
@@ -522,6 +550,7 @@ module Redoc
     @[JSON::Field(emit_null: true)]
     property location : Location?
 
+    # :nodoc:
     def self.new(method : Crystal::Def, ref : TypeRef?)
       params = method.args.try(&.map { |a| Parameter.new a }) || [] of Parameter
 
@@ -550,6 +579,7 @@ module Redoc
       )
     end
 
+    # :nodoc:
     def initialize(@html_id : String, @name : String, *,
                    @params : Array(Parameter) = [] of Parameter,
                    @parent : TypeRef? = nil, @body : String? = nil,
