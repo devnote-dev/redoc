@@ -54,7 +54,7 @@ module Redoc
         doc: type.doc,
         top_level: top_level,
       )
-      ref = TypeRef.new(mod.html_id, mod.name, mod.full_name, :module)
+      ref = TypeRef.new(mod.html_id, mod.path, mod.name, mod.full_name, :module)
 
       if constants = type.constants
         constants.each do |const|
@@ -105,7 +105,7 @@ module Redoc
           top_level: top_level,
         )
         cls.parent = type.superclass
-        ref = TypeRef.new(cls.html_id, cls.name, cls.full_name, :{{type.downcase.id}})
+        ref = TypeRef.new(cls.html_id, cls.path, cls.name, cls.full_name, :{{type.downcase.id}})
 
         if constants = type.constants
           constants.each do |const|
@@ -150,7 +150,7 @@ module Redoc
     private def self.transform_enum(type : Crystal::Type, top_level : Bool) : Enum
       {% begin %}
         type.responds_to?(:html_id) || raise "BUG: missing html_id for Crystal::Type enum"
-        ref = TypeRef.new(type.html_id, type.name, type.full_name, :enum)
+        ref = TypeRef.new(type.html_id, type.path, type.name, type.full_name, :enum)
 
         if const_defs = type.constants
           constants = const_defs.map { |c| Const.new(c, ref) }

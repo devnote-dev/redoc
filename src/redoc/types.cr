@@ -244,6 +244,9 @@ module Redoc
     # The HTML ID of the referenced type.
     getter html_id : String
 
+    # The HTML path of the referenced type.
+    getter path : String?
+
     # The name of the referenced type.
     getter name : String
 
@@ -254,7 +257,7 @@ module Redoc
     getter kind : Kind
 
     # :nodoc:
-    def initialize(@html_id, @name, @full_name, @kind)
+    def initialize(@html_id, @path, @name, @full_name, @kind)
     end
   end
 
